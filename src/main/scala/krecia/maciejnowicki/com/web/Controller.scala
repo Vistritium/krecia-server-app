@@ -1,16 +1,22 @@
 package krecia.maciejnowicki.com.web
 
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.server.Directives.*
 import akka.http.scaladsl.server.{Directive1, Route}
 import akka.util.Timeout
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.util.{Failure, Success, Try}
 
+
+case class ControllerDeps(
+  mapper: ObjectMapper
+)
 @DiscoverableController
-abstract class Controller extends LazyLogging {
+abstract class Controller(controllerDeps: ControllerDeps) extends LazyLogging {
 
   protected implicit val timeout: Timeout = Timeout(1.hour)
 
@@ -25,5 +31,7 @@ abstract class Controller extends LazyLogging {
       case Success(value) => next(value)
     }
   }
+
+  def completeJson(obj: Any) = complete(HttpEntity(ContentTypes.`application/json`, controllerDeps.mapper.writeValueAsString(obj)))
 
 }
