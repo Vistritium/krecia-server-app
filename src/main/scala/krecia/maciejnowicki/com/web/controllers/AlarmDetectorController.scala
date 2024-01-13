@@ -10,7 +10,9 @@ import krecia.maciejnowicki.com.detector.{AlarmDetectorCommand, AlarmDetectorSer
 import akka.actor.typed.scaladsl.AskPattern.*
 import akka.util.Timeout
 import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
+import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
 
+import java.time.Instant
 import scala.concurrent.duration.*
 
 @DiscoverableController
@@ -24,11 +26,27 @@ class AlarmDetectorController @Inject()(
   private implicit val timeout: Timeout = 3.seconds
   private implicit val implicitAs: ActorSystem[_] = actorSystem
 
-  override def route: Route = path("alarm_detector") {
-    onSuccess(alarmDetectorService.alarmDetectorRef.askWithStatus[GetStateReply](ref => AlarmDetectorCommand.GetState(ref))) { success =>
-      completeJson(success.alarmData)
+  override def route: Route = pathPrefix("alarm_detector") {
+    get {
+      onSuccess(alarmDetectorService.alarmDetectorRef.askWithStatus[GetStateReply](ref => AlarmDetectorCommand.GetState(ref))) { success =>
+        completeJson(success.alarmData)
+      }
+    } ~ (path(Segment) & post) { toState =>
+
+      val from = if (toState == "OFF") {
+        "ON"
+      } else "OFF"
+
+      alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
+        "local",
+        "local",
+        from,
+        toState,
+        "",
+        Instant.now()
+      )))
+
+      complete("ok")
     }
-
-
   }
 }

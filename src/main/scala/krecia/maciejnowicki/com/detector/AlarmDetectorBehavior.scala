@@ -9,6 +9,7 @@ import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmService}
 import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
 import krecia.maciejnowicki.com.detector.AlarmState.OFF
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
+import scala.concurrent.duration._
 
 @Singleton
 class AlarmDetectorBehavior @Inject()(
@@ -19,27 +20,47 @@ class AlarmDetectorBehavior @Inject()(
   private case class State(alarmStateManager: AlarmStateManager, alarmData: AlarmStateData)
 
   def alarmDetector(): Behavior[AlarmDetectorCommand] = {
-    alarmDetectorBehavior(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty)))
+    alarmDetectorBehaviour(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty)))
   }
 
-  private def alarmDetectorBehavior(state: State): Behavior[AlarmDetectorCommand] = {
-    Behaviors.receiveMessage {
-      case AlarmDetectorCommand.BinaryStateEventCommand(binaryStateEvent) => {
-        logger.info(s"Processing ${binaryStateEvent}")
-        val alarmStateData = state.alarmStateManager.process(binaryStateEvent)
-        if (alarmStateData.alarms.nonEmpty) {
-          alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON)
-        } else {
-          alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF)
-        }
+  private def alarmDetectorBehaviour(state: State): Behavior[AlarmDetectorCommand] = {
+    Behaviors.withTimers { scheduler =>
+      scheduler.startTimerWithFixedDelay(AlarmDetectorCommand.Refresh, 1.seconds, 1.minutes)
 
-        alarmDetectorBehavior(state.copy(
-          alarmData = alarmStateData
-        ))
-      }
-      case AlarmDetectorCommand.GetState(replyTo) => {
-        replyTo ! StatusReply.Success(GetStateReply(state.alarmData))
-        Behaviors.same
+      alarmDetectorBehaviorActive(state)
+    }
+  }
+
+  private def alarmDetectorBehaviorActive(state: State): Behavior[AlarmDetectorCommand] = {
+    //    Behaviors.withTimers { scheduler =>
+    //      scheduler.startTimerWithFixedDelay(AlarmDetectorCommand.Refresh, 1.seconds, 1.minutes)
+
+    Behaviors.setup { ctx =>
+
+      Behaviors.receiveMessage {
+        case AlarmDetectorCommand.Refresh => {
+          val alarmStateData = state.alarmStateManager.getState
+          alarmDetectorBehaviorActive(state.copy(
+            alarmData = alarmStateData
+          ))
+        }
+        case AlarmDetectorCommand.BinaryStateEventCommand(binaryStateEvent) => {
+          logger.info(s"Processing ${binaryStateEvent}")
+          val alarmStateData = state.alarmStateManager.process(binaryStateEvent)
+          if (alarmStateData.alarms.nonEmpty) {
+            alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON)
+          } else {
+            alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF)
+          }
+
+          alarmDetectorBehaviorActive(state.copy(
+            alarmData = alarmStateData
+          ))
+        }
+        case AlarmDetectorCommand.GetState(replyTo) => {
+          replyTo ! StatusReply.Success(GetStateReply(state.alarmData))
+          Behaviors.same
+        }
       }
     }
   }
@@ -53,5 +74,7 @@ object AlarmDetectorCommand {
   case class BinaryStateEventCommand(binaryStateEvent: BinaryStateEvent) extends AlarmDetectorCommand
   case class GetState(replyTo: ActorRef[StatusReply[GetStateReply]]) extends AlarmDetectorCommand
   case class GetStateReply(alarmData: AlarmStateData)
+
+  case object Refresh extends AlarmDetectorCommand
 
 }

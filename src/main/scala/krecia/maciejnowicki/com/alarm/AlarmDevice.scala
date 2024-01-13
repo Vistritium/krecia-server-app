@@ -46,7 +46,9 @@ class AlarmDevice @Inject()(
       }
     }
 
-    alarmDeviceBehavior(AlarmDeviceState(OFF, Instant.now()))
+    val state = AlarmDeviceState(OFF, Instant.now())
+    statusChangesListeners.foreach(_ ! state)
+    alarmDeviceBehavior(state)
 
   }
 
