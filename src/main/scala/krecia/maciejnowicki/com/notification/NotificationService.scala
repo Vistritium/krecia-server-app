@@ -16,13 +16,14 @@ import akka.stream.alpakka.mqtt.{MqttQoS, MqttSubscriptions}
 import akka.stream.alpakka.mqtt.scaladsl.MqttSource
 import akka.stream.scaladsl.{RestartSource, Source}
 import com.typesafe.config.Config
+import krecia.maciejnowicki.com.integrations.CriticalNotificationIntegration
 import krecia.maciejnowicki.com.mqtt.MQTTConnection
 
 import scala.concurrent.duration.*
 
 @Singleton
 class NotificationService @Inject()(
-  callPhoneService: CallPhoneService,
+  criticalNotificationIntegration: CriticalNotificationIntegration,
   ec: ExecutionContext,
   actorSystem: ActorSystem,
   config: Config,
@@ -74,14 +75,14 @@ class NotificationService @Inject()(
   private def behaviour(state: State): Behavior[CriticalNotificationServiceCommand] = Behaviors.receiveMessage {
     case CriticalNotificationServiceCommand.Send => {
       if (state.enabled) {
-        Future {
-          callPhoneService.call()
-        }.onComplete {
-          case Failure(exception) => logger.error("Couldn't call phone", exception)
+        logger.info("Notification service enabled and sending critical notification")
+        criticalNotificationIntegration.send().onComplete {
+          case Failure(exception) => logger.error("Couldn't invoke critical notification", exception)
           case Success(value) =>
         }
 
-        behaviour(state.copy(enabled = false))
+//        behaviour(state.copy(enabled = false))
+        Behaviors.same
       } else {
         logger.info("notification was already sent")
         Behaviors.same

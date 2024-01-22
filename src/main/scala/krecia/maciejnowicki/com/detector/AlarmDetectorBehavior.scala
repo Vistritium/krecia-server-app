@@ -40,6 +40,7 @@ class AlarmDetectorBehavior @Inject()(
       Behaviors.receiveMessage {
         case AlarmDetectorCommand.Refresh => {
           val alarmStateData = state.alarmStateManager.getState
+          applyState(alarmStateData)
           alarmDetectorBehaviorActive(state.copy(
             alarmData = alarmStateData
           ))
@@ -47,11 +48,7 @@ class AlarmDetectorBehavior @Inject()(
         case AlarmDetectorCommand.BinaryStateEventCommand(binaryStateEvent) => {
           logger.info(s"Processing ${binaryStateEvent}")
           val alarmStateData = state.alarmStateManager.process(binaryStateEvent)
-          if (alarmStateData.alarms.nonEmpty) {
-            alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON)
-          } else {
-            alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF)
-          }
+          applyState(alarmStateData)
 
           alarmDetectorBehaviorActive(state.copy(
             alarmData = alarmStateData
@@ -65,6 +62,13 @@ class AlarmDetectorBehavior @Inject()(
     }
   }
 
+  private def applyState(alarmStateData: AlarmStateData): Unit = {
+    if (alarmStateData.alarms.nonEmpty) {
+      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON)
+    } else {
+      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF)
+    }
+  }
 }
 
 sealed trait AlarmDetectorCommand

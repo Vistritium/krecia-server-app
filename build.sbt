@@ -33,6 +33,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
   "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.16.0",
   "com.twilio.sdk" % "twilio" % "9.15.0",
+  "com.vonage" % "server-sdk" % "8.1.0",
   "org.scalatest" %% "scalatest" % "3.2.17" % Test,
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test
 )
