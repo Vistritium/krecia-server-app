@@ -31,14 +31,18 @@ class MessagesService @Inject()(
   def source: Source[BinaryStateEvent, NotUsed] = {
     val settings = RestartSettings(
       minBackoff = 3.seconds,
-      maxBackoff = 30.seconds,
+      maxBackoff = 60.seconds,
       randomFactor = 0.2 // adds 20% "noise" to vary the intervals slightly
-    ).withMaxRestarts(30, 5.minutes) // limits the amount of restarts to 20 within 5 minutes
+    )
 
     RestartSource.withBackoff(settings) { () =>
+      logger.info("Creating MQTT connection")
       MqttSource.atMostOnce(
         MQTTConnection.connectionSettings("server-app"),
-        MqttSubscriptions(Map("ha/binary_sensor/#" -> MqttQoS.ExactlyOnce)),
+        MqttSubscriptions(Map(
+          "ha/binary_sensor/#" -> MqttQoS.ExactlyOnce,
+          "ha/frigate_notification/#" -> MqttQoS.ExactlyOnce,
+        )),
         bufferSize = 8
       ).map(msg => {
         val payload = msg.payload.utf8String

@@ -9,7 +9,9 @@ import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmService}
 import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
 import krecia.maciejnowicki.com.detector.AlarmState.OFF
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
-import scala.concurrent.duration._
+
+import scala.concurrent.Future
+import scala.concurrent.duration.*
 
 @Singleton
 class AlarmDetectorBehavior @Inject()(
@@ -21,6 +23,18 @@ class AlarmDetectorBehavior @Inject()(
 
   def alarmDetector(): Behavior[AlarmDetectorCommand] = {
     alarmDetectorBehaviour(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty)))
+  }
+  
+  private def teeest = {
+    Behaviors.setup[String] { context => 
+      
+      Behaviors.receiveMessage[String] { msg =>
+        context.pipeToSelf[String](Future.successful("")){ result =>
+          "completed"
+        }
+        Behaviors.same[String]
+      }
+    }
   }
 
   private def alarmDetectorBehaviour(state: State): Behavior[AlarmDetectorCommand] = {

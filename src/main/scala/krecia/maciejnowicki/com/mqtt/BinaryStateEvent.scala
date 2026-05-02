@@ -13,7 +13,7 @@ case class BinaryStateEvent(
   entityId: String,
   fromState: String,
   toState: String,
-  `for`: String,
+  `for`: Option[String],
 
   @JsonDeserialize(classOf[HAInstantDeserializer])
   changed: Instant,

@@ -17,6 +17,6 @@ class MQTTConnection @Inject()(
     prefix + clientId,
     new MemoryPersistence
   )
-    .withAutomaticReconnect(true)
+    .withAutomaticReconnect(false)
 
 }

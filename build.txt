@@ -1,0 +1,9 @@
+sbt "Docker / publishLocal"
+
+sbt "Docker / publish"
+
+
+sudo docker compose pull serverapp
+sudo docker compose up --force-recreate --no-deps -d serverapp
+
+

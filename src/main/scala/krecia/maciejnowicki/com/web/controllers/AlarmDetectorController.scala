@@ -42,7 +42,7 @@ class AlarmDetectorController @Inject()(
         "local",
         from,
         toState,
-        "",
+        None,
         Instant.now()
       )))
 

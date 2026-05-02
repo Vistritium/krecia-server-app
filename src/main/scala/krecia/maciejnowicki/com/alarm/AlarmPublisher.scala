@@ -38,7 +38,7 @@ class AlarmPublisher @Inject()(
         2,
         OverflowStrategy.dropHead
       ).map { alarmStateChange =>
-        MqttMessage("alarm_device", ByteString(alarmStateChange.state.toString))
+        MqttMessage("alarm_device", ByteString(alarmStateChange.state.toString)).withRetained(true)
       }
       .log("alarm-publisher")
       .to(

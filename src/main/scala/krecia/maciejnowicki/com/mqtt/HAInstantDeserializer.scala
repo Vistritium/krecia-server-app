@@ -9,9 +9,10 @@ import java.time.{Instant, OffsetDateTime}
 
 class HAInstantDeserializer extends StdDeserializer[Instant](classOf[Instant]) {
 
-  private val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSXXX")
+  private val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSSXX")
 
-  override def deserialize(p: JsonParser, ctxt: DeserializationContext): Instant =
+  override def deserialize(p: JsonParser, ctxt: DeserializationContext): Instant = {
     Instant.from(pattern.parse(p.getValueAsString))
+  }
 }
 

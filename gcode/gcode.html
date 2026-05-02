@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gcode Decoder</title>
+</head>
+<body>
+<h1>Gcode Decoder</h1>
+<textarea id="inputGcode" rows="20" cols="100" placeholder="Paste your gcode here..."></textarea>
+<br>
+<button id="decodeButton">Decode and Download</button>
+
+<script>
+    function decode(gcode) {
+        const lines = gcode.replace(/\r/g, "").split("\n");
+        const stringToTrim = ";SETTING_3";
+        const res = lines
+            .filter(line => line.startsWith(stringToTrim))
+            .map(line => line.substring(stringToTrim.length + 1))
+            .reduce((acc, curr) => acc + curr, "");
+
+        const node = JSON.parse(res);
+
+        function parseIni(name, string) {
+            const replaced = string.replace(/\\n/g, "\n");
+            return `### ${name} ###\n${replaced}`;
+        }
+
+        const result = Object.entries(node).flatMap(([key, value]) => {
+            if (Array.isArray(value)) {
+                return value.map((elem, index) => [`${key}_${index}`, elem]);
+            } else {
+                return [[key, value]];
+            }
+        })
+            .map(([key, value]) => parseIni(key, value))
+            .join("\n");
+
+        return result;
+    }
+
+    document.getElementById('decodeButton').addEventListener('click', () => {
+        const gcode = document.getElementById('inputGcode').value;
+        const decodedResult = decode(gcode);
+
+        const blob = new Blob([decodedResult], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'converted.gcode';
+        a.click();
+
+        URL.revokeObjectURL(url);
+    });
+</script>
+</body>
+</html>

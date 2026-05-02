@@ -44,7 +44,7 @@ class NotificationService @Inject()(
       minBackoff = 3.seconds,
       maxBackoff = 30.seconds,
       randomFactor = 0.2 // adds 20% "noise" to vary the intervals slightly
-    ).withMaxRestarts(30, 5.minutes) // limits the amount of restarts to 20 within 5 minutes
+    )
 
     RestartSource.withBackoff(settings) { () =>
       MqttSource.atMostOnce(
