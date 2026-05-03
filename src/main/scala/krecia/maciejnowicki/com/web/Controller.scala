@@ -1,9 +1,9 @@
 package krecia.maciejnowicki.com.web
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.Directives.*
-import akka.http.scaladsl.server.{Directive1, Route}
-import akka.util.Timeout
+import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+import org.apache.pekko.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.{Directive1, Route}
+import org.apache.pekko.util.Timeout
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.Inject
 import com.typesafe.scalalogging.LazyLogging

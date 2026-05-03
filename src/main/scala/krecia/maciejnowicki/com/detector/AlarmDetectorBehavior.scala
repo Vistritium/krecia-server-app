@@ -1,8 +1,8 @@
 package krecia.maciejnowicki.com.detector
 
-import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.Behaviors
-import akka.pattern.StatusReply
+import org.apache.pekko.actor.typed.{ActorRef, Behavior}
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.pattern.StatusReply
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmService}

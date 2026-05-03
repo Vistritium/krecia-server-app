@@ -1,20 +1,20 @@
 package krecia.maciejnowicki.com.notification
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.typed.{ActorRef, Behavior}
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.integrations.twilio.CallPhoneService
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-import akka.actor.typed.scaladsl.adapter.*
-import akka.stream.RestartSettings
-import akka.stream.alpakka.mqtt.{MqttQoS, MqttSubscriptions}
-import akka.stream.alpakka.mqtt.scaladsl.MqttSource
-import akka.stream.scaladsl.{RestartSource, Source}
+import org.apache.pekko.actor.typed.scaladsl.adapter.*
+import org.apache.pekko.stream.RestartSettings
+import org.apache.pekko.stream.connectors.mqtt.{MqttQoS, MqttSubscriptions}
+import org.apache.pekko.stream.connectors.mqtt.scaladsl.MqttSource
+import org.apache.pekko.stream.scaladsl.{RestartSource, Source}
 import com.typesafe.config.Config
 import krecia.maciejnowicki.com.integrations.CriticalNotificationIntegration
 import krecia.maciejnowicki.com.mqtt.MQTTConnection

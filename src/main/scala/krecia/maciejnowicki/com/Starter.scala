@@ -1,12 +1,12 @@
 package krecia.maciejnowicki.com
 
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.Sink
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.Sink
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.mqtt.MessagesService
-import akka.actor.typed.scaladsl.adapter.*
+import org.apache.pekko.actor.typed.scaladsl.adapter.*
 import krecia.maciejnowicki.com.detector.{AlarmDetectorBehavior, AlarmDetectorCommand, AlarmDetectorService}
 
 @Singleton

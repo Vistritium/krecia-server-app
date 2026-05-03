@@ -1,6 +1,6 @@
 package krecia.maciejnowicki.com.mqtt
 
-import akka.stream.alpakka.mqtt.MqttConnectionSettings
+import org.apache.pekko.stream.connectors.mqtt.MqttConnectionSettings
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging

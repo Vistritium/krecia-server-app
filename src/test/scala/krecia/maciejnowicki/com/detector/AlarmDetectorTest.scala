@@ -1,7 +1,7 @@
 package krecia.maciejnowicki.com.detector
 
-import akka.actor.testkit.typed.scaladsl.{BehaviorTestKit, ReplyInbox}
-import akka.pattern.StatusReply
+import org.apache.pekko.actor.testkit.typed.scaladsl.{BehaviorTestKit, ReplyInbox}
+import org.apache.pekko.pattern.StatusReply
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
 import org.scalatest.flatspec.AnyFlatSpec
 

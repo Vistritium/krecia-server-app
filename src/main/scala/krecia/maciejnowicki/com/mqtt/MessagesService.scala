@@ -1,11 +1,11 @@
 package krecia.maciejnowicki.com.mqtt
 
-import akka.{Done, NotUsed}
-import akka.actor.ActorSystem
-import akka.stream.RestartSettings
-import akka.stream.alpakka.mqtt.{MqttConnectionSettings, MqttMessage, MqttQoS, MqttSubscriptions}
-import akka.stream.alpakka.mqtt.scaladsl.MqttSource
-import akka.stream.scaladsl.{RestartSource, Source}
+import org.apache.pekko.{Done, NotUsed}
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.RestartSettings
+import org.apache.pekko.stream.connectors.mqtt.{MqttConnectionSettings, MqttMessage, MqttQoS, MqttSubscriptions}
+import org.apache.pekko.stream.connectors.mqtt.scaladsl.MqttSource
+import org.apache.pekko.stream.scaladsl.{RestartSource, Source}
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging

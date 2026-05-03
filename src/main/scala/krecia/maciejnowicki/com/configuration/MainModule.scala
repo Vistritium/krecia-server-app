@@ -1,6 +1,6 @@
 package krecia.maciejnowicki.com.configuration
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, SerializationFeature}
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule

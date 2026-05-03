@@ -2,15 +2,15 @@ package krecia.maciejnowicki.com.web
 
 import java.lang.reflect.Modifier
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.Http
 import com.google.inject.{Inject, Injector, Singleton}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
 import org.reflections.Reflections
 import org.reflections.scanners.{SubTypesScanner, TypeAnnotationsScanner}
 import org.reflections.util.{ClasspathHelper, ConfigurationBuilder}
-import akka.http.scaladsl.server.Directives._
+import org.apache.pekko.http.scaladsl.server.Directives._
 
 import collection.JavaConverters._
 import scala.concurrent.ExecutionContext

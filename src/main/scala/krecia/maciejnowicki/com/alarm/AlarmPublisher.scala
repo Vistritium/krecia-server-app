@@ -1,19 +1,19 @@
 package krecia.maciejnowicki.com.alarm
 
-import akka.Done
-import akka.actor.ActorSystem
-import akka.actor.typed.Behavior
-import akka.actor.typed.scaladsl.Behaviors
-import akka.stream.alpakka.mqtt.scaladsl.MqttSink
-import akka.stream.alpakka.mqtt.{MqttMessage, MqttQoS}
-import akka.stream.scaladsl.{RestartSink, Source}
-import akka.stream.{CompletionStrategy, OverflowStrategy, RestartSettings}
-import akka.util.ByteString
+import org.apache.pekko.Done
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.typed.Behavior
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.stream.connectors.mqtt.scaladsl.MqttSink
+import org.apache.pekko.stream.connectors.mqtt.{MqttMessage, MqttQoS}
+import org.apache.pekko.stream.scaladsl.{RestartSink, Source}
+import org.apache.pekko.stream.{CompletionStrategy, OverflowStrategy, RestartSettings}
+import org.apache.pekko.util.ByteString
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.detector.AlarmState
 import krecia.maciejnowicki.com.mqtt.MQTTConnection
-import akka.actor.typed.scaladsl.adapter.*
+import org.apache.pekko.actor.typed.scaladsl.adapter.*
 import scala.concurrent.duration._
 
 @Singleton

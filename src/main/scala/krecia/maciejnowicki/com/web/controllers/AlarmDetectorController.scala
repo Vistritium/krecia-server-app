@@ -1,14 +1,14 @@
 package krecia.maciejnowicki.com.web.controllers
 
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.server.Route
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.server.Route
 import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
-import akka.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.detector.{AlarmDetectorCommand, AlarmDetectorService}
-import akka.actor.typed.scaladsl.AskPattern.*
-import akka.util.Timeout
+import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
+import org.apache.pekko.util.Timeout
 import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
 

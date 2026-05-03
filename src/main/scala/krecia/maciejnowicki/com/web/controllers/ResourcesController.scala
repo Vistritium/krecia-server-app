@@ -1,12 +1,12 @@
 package krecia.maciejnowicki.com.web.controllers
 
-import akka.http.scaladsl.server.Route
+import org.apache.pekko.http.scaladsl.server.Route
 import com.google.inject.{Inject, Singleton}
 import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
 import com.typesafe.scalalogging.LazyLogging
-import akka.http.scaladsl.model.headers.*
-import akka.http.scaladsl.model.headers.CacheDirectives.*
-import akka.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.model.headers.*
+import org.apache.pekko.http.scaladsl.model.headers.CacheDirectives.*
+import org.apache.pekko.http.scaladsl.server.Directives.*
 
 import scala.concurrent.duration.*
 

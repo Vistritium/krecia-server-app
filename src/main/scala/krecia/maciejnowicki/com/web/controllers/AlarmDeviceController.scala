@@ -1,16 +1,16 @@
 package krecia.maciejnowicki.com.web.controllers
 
-import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.server.Directives.path
-import akka.http.scaladsl.server.Route
+import org.apache.pekko.actor.typed.ActorSystem
+import org.apache.pekko.http.scaladsl.server.Directives.path
+import org.apache.pekko.http.scaladsl.server.Route
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
-import akka.http.scaladsl.server.Directives.*
+import org.apache.pekko.http.scaladsl.server.Directives.*
 import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmDeviceState, AlarmPublisher, AlarmService}
 import krecia.maciejnowicki.com.detector.AlarmState
-import akka.actor.typed.scaladsl.AskPattern.*
-import akka.pattern.StatusReply
+import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
+import org.apache.pekko.pattern.StatusReply
 
 import java.time.Instant
 

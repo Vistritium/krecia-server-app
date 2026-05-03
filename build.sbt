@@ -4,9 +4,11 @@ version := "0.1"
 
 scalaVersion := "3.3.1"
 val JacksonVersion = "2.16.1"
-val AkkaVersion = "2.9.0"
+val PekkoVersion = "1.1.3"
+val PekkoHttpVersion = "1.3.0"
+val PekkoConnectorsVersion = "1.3.0"
 
-resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+resolvers += "Pekko repository".at("https://repo.akka.io/maven")
 
 enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
@@ -24,18 +26,18 @@ libraryDependencies ++= Seq(
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
   "ch.qos.logback" % "logback-classic" % "1.4.14",
   "net.harawata" % "appdirs" % "1.2.2",
-  "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
-  "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
-  "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion,
-  "com.typesafe.akka" %% "akka-http" % "10.6.0",
-  "com.lightbend.akka" %% "akka-stream-alpakka-mqtt" % "7.0.1",
+  "org.apache.pekko" % "pekko-actor_2.13" % PekkoVersion,
+  "org.apache.pekko" % "pekko-stream_2.13" % PekkoVersion,
+  "org.apache.pekko" % "pekko-slf4j_2.13" % PekkoVersion,
+  "org.apache.pekko" % "pekko-http_2.13" % PekkoHttpVersion,
+  "org.apache.pekko" % "pekko-connectors-mqtt_2.13" % PekkoConnectorsVersion,
   "org.reflections" % "reflections" % "0.10.2",
-  "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
+  "org.apache.pekko" % "pekko-actor-typed_2.13" % PekkoVersion,
   "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.16.0",
   "com.twilio.sdk" % "twilio" % "9.15.0",
   "com.vonage" % "server-sdk" % "8.1.0",
   "org.scalatest" %% "scalatest" % "3.2.17" % Test,
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test
+  "org.apache.pekko" % "pekko-actor-testkit-typed_2.13" % PekkoVersion % Test
 )
 
 enablePlugins(SbtTwirl)

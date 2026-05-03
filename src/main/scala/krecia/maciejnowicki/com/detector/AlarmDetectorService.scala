@@ -1,7 +1,7 @@
 package krecia.maciejnowicki.com.detector
 
-import akka.actor.ActorSystem
-import akka.actor.typed.scaladsl.adapter.*
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.actor.typed.scaladsl.adapter.*
 import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 

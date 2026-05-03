@@ -1,8 +1,8 @@
 package krecia.maciejnowicki.com.integrations.twilio
 
-import akka.Done
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Sink, Source}
+import org.apache.pekko.Done
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.scaladsl.{Sink, Source}
 import com.google.inject.{Inject, Singleton}
 import com.twilio.http.TwilioRestClient
 import com.twilio.rest.api.v2010.account.Call
