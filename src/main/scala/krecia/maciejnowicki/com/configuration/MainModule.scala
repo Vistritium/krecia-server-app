@@ -4,7 +4,6 @@ import org.apache.pekko.actor.ActorSystem
 import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, SerializationFeature}
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
-import com.github.pjfanning.`enum`.EnumModule
 import com.google.inject.{AbstractModule, Provides, Singleton}
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
@@ -33,7 +32,6 @@ class MainModule(config: Config) extends AbstractModule with LazyLogging {
   def mapper(): ObjectMapper = {
     val mapper = new ObjectMapper()
     mapper.registerModule(DefaultScalaModule)
-    mapper.registerModule(EnumModule)
     mapper.registerModule(new JavaTimeModule())
     mapper.enable(SerializationFeature.INDENT_OUTPUT)
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)

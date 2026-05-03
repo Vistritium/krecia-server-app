@@ -8,8 +8,6 @@ val PekkoVersion = "1.6.0"
 val PekkoHttpVersion = "1.3.0"
 val PekkoConnectorsVersion = "1.3.0"
 
-resolvers += "Pekko repository".at("https://repo.akka.io/maven")
-
 enablePlugins(JavaAppPackaging)
 enablePlugins(DockerPlugin)
 
@@ -33,7 +31,6 @@ libraryDependencies ++= Seq(
   "org.apache.pekko" % "pekko-connectors-mqtt_2.13" % PekkoConnectorsVersion,
   "org.reflections" % "reflections" % "0.10.2",
   "org.apache.pekko" % "pekko-actor-typed_2.13" % PekkoVersion,
-  "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.21.3",
   "com.twilio.sdk" % "twilio" % "12.0.0",
   "com.vonage" % "server-sdk" % "9.10.2",
   "org.scalatest" %% "scalatest" % "3.2.20" % Test,

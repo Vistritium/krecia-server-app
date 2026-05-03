@@ -20,6 +20,6 @@ class AkkaModule extends AbstractModule {
 
   @Provides
   @Singleton
-  def httpClient(actorSystem: ActorSystem): HttpExt = Http()(actorSystem)
+  def httpClient(actorSystem: ActorSystem): HttpExt = Http()(using actorSystem)
 
 }

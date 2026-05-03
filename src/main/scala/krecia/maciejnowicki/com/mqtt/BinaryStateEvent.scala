@@ -15,7 +15,7 @@ case class BinaryStateEvent(
   toState: String,
   `for`: Option[String],
 
-  @JsonDeserialize(classOf[HAInstantDeserializer])
+  @JsonDeserialize(`using` = classOf[HAInstantDeserializer])
   changed: Instant,
 )
 
