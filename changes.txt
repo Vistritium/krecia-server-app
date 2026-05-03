@@ -1,80 +1,171 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
-index 6dc8f53b4b0ad608c7d4fe90f0c5250f3a7ca745..8958e500e839895ac3a72816401dfafc552867a3 100644
---- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
-+++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
-@@ -1,52 +1,59 @@
- package krecia.maciejnowicki.com.web.controllers
+diff --git a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala
+index b83a7f639b1810eea00f8d49dee91f4dd0b6deb2..11cefe7dda76ab5928643a4231d8eae52df22b88 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala
+@@ -1,66 +1,68 @@
+ package krecia.maciejnowicki.com.alarm
  
- import org.apache.pekko.actor.typed.ActorSystem
- import org.apache.pekko.http.scaladsl.server.Route
- import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
- import org.apache.pekko.http.scaladsl.server.Directives.*
+ import org.apache.pekko.actor.typed.scaladsl.Behaviors
+ import org.apache.pekko.actor.typed.{ActorRef, Behavior}
+ import org.apache.pekko.pattern.StatusReply
  import com.google.inject.{Inject, Singleton}
  import com.typesafe.scalalogging.LazyLogging
- import krecia.maciejnowicki.com.detector.{AlarmDetectorCommand, AlarmDetectorService}
- import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
- import org.apache.pekko.util.Timeout
- import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
- import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
+ import krecia.maciejnowicki.com.detector.AlarmState
+ import krecia.maciejnowicki.com.detector.AlarmState.OFF
  
  import java.time.Instant
-+import java.util.Locale
- import scala.concurrent.duration.*
  
- @DiscoverableController
+ case class AlarmDeviceState(
+   currentState: AlarmState,
+   stateChange: Instant,
++  triggeredByAlarms: Seq[String],
+ )
+ 
  @Singleton
- class AlarmDetectorController @Inject()(
-   controllerDeps: ControllerDeps,
-   alarmDetectorService: AlarmDetectorService,
-   actorSystem: ActorSystem[Nothing]
- ) extends Controller(controllerDeps) {
+ class AlarmDevice @Inject()(
+   alarmPublisher: AlarmPublisher
+ ) extends LazyLogging {
  
-   private implicit val timeout: Timeout = 3.seconds
-   private implicit val implicitAs: ActorSystem[_] = actorSystem
+   def alarmDevice(): Behavior[AlarmDeviceCommand] = {
+     val statusChangesListeners: Seq[ActorRef[AlarmDeviceState]] = Seq(alarmPublisher.publisher)
  
-   override def route: Route = pathPrefix("alarm_detector") {
-     get {
-       onSuccess(alarmDetectorService.alarmDetectorRef.askWithStatus[GetStateReply](ref => AlarmDetectorCommand.GetState(ref))) { success =>
-         completeJson(success.alarmData)
+     def alarmDeviceBehavior(state: AlarmDeviceState): Behavior[AlarmDeviceCommand] = {
+       Behaviors.setup { context =>
+         Behaviors.receiveMessage {
+           case AlarmDeviceCommand.GetState(replyTo) => {
+             replyTo ! StatusReply.Success(state)
+             Behaviors.same
+           }
+-          case AlarmDeviceCommand.SetState(alarmState) => {
+-            if (state.currentState != alarmState) {
++          case AlarmDeviceCommand.SetState(alarmState, triggeredByAlarms) => {
++            if (state.currentState != alarmState || state.triggeredByAlarms != triggeredByAlarms) {
+               val newState = state.copy(
+                 currentState = alarmState,
+-                stateChange = Instant.now()
++                stateChange = Instant.now(),
++                triggeredByAlarms = triggeredByAlarms
+               )
+               statusChangesListeners.foreach(_ ! newState)
+               alarmDeviceBehavior(newState)
+             } else {
+               Behaviors.same
+             }
+           }
+         }
        }
-     } ~ (path(Segment) & post) { toState =>
--
--      val from = if (toState == "OFF") {
--        "ON"
--      } else "OFF"
--
--      alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
--        "local",
--        "local",
--        from,
--        toState,
--        None,
--        Instant.now()
--      )))
--
--      complete("ok")
-+      val normalizedState = toState.toUpperCase(Locale.ROOT)
-+
-+      normalizedState match {
-+        case "ON" | "OFF" =>
-+          val from = if (normalizedState == "OFF") {
-+            "ON"
-+          } else "OFF"
-+
-+          alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
-+            "local",
-+            "local",
-+            from,
-+            normalizedState,
-+            None,
-+            Instant.now()
-+          )))
-+
-+          complete("ok")
-+        case _ =>
-+          complete(400, "Invalid toState. Supported values: ON, OFF")
-+      }
+     }
+ 
+-    val state = AlarmDeviceState(OFF, Instant.now())
++    val state = AlarmDeviceState(OFF, Instant.now(), Seq.empty)
+     statusChangesListeners.foreach(_ ! state)
+     alarmDeviceBehavior(state)
+ 
+   }
+ 
+ 
+ }
+ 
+ 
+ trait AlarmDeviceCommand
+ 
+ object AlarmDeviceCommand {
+ 
+-  case class SetState(alarmState: AlarmState) extends AlarmDeviceCommand
++  case class SetState(alarmState: AlarmState, triggeredByAlarms: Seq[String] = Seq.empty) extends AlarmDeviceCommand
+   case class GetState(replyTo: ActorRef[StatusReply[AlarmDeviceState]]) extends AlarmDeviceCommand
+ 
+-}
+\ No newline at end of file
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala b/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala
+index 7ae4e420a6d7b5c6829e1794a3ac5bb90970c2a7..d4834c5ac822c22b993f954bc5437f6f15ce8178 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala
+@@ -56,43 +56,43 @@ class AlarmDetectorBehavior @Inject()(
+           val alarmStateData = state.alarmStateManager.getState
+           applyState(alarmStateData)
+           alarmDetectorBehaviorActive(state.copy(
+             alarmData = alarmStateData
+           ))
+         }
+         case AlarmDetectorCommand.BinaryStateEventCommand(binaryStateEvent) => {
+           logger.info(s"Processing ${binaryStateEvent}")
+           val alarmStateData = state.alarmStateManager.process(binaryStateEvent)
+           applyState(alarmStateData)
+ 
+           alarmDetectorBehaviorActive(state.copy(
+             alarmData = alarmStateData
+           ))
+         }
+         case AlarmDetectorCommand.GetState(replyTo) => {
+           replyTo ! StatusReply.Success(GetStateReply(state.alarmData))
+           Behaviors.same
+         }
+       }
+     }
+   }
+ 
+   private def applyState(alarmStateData: AlarmStateData): Unit = {
+     if (alarmStateData.alarms.nonEmpty) {
+-      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON)
++      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON, alarmStateData.alarms)
+     } else {
+-      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF)
++      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF, Seq.empty)
+     }
+   }
+ }
+ 
+ sealed trait AlarmDetectorCommand
+ 
+ object AlarmDetectorCommand {
+ 
+   case class BinaryStateEventCommand(binaryStateEvent: BinaryStateEvent) extends AlarmDetectorCommand
+   case class GetState(replyTo: ActorRef[StatusReply[GetStateReply]]) extends AlarmDetectorCommand
+   case class GetStateReply(alarmData: AlarmStateData)
+ 
+   case object Refresh extends AlarmDetectorCommand
+ 
+ }
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala
+index 0fa77d6d6d9ad62e1151df147a13a30337e7c19a..85a421482c694c6a9931572266d9b89cb8c1eba0 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala
+@@ -7,34 +7,34 @@ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
+ import org.apache.pekko.http.scaladsl.server.Directives.*
+ import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmDeviceState, AlarmPublisher, AlarmService}
+ import krecia.maciejnowicki.com.detector.AlarmState
+ import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
+ import org.apache.pekko.pattern.StatusReply
+ 
+ import java.time.Instant
+ 
+ @Singleton
+ @DiscoverableController
+ class AlarmDeviceController @Inject()(
+   controllerDeps: ControllerDeps,
+   alarmPublisher: AlarmPublisher,
+   alarmService: AlarmService,
+   actorSystem: ActorSystem[Nothing],
+ ) extends Controller(controllerDeps) with LazyLogging {
+ 
+   implicit val implicitAk: ActorSystem[Nothing] = actorSystem
+ 
+ 
+   override def route: Route = pathPrefix("alarm_device") {
+     (post & path("send" / Segment)) { stateArg =>
+       val alarmState = AlarmState.valueOf(stateArg)
+-      alarmPublisher.publisher.tell(AlarmDeviceState(alarmState, Instant.now))
++      alarmPublisher.publisher.tell(AlarmDeviceState(alarmState, Instant.now, Seq.empty))
+       complete("ok")
+     } ~ {
+       onSuccess(alarmService.alarmDeviceRef.askWithStatus(ref => AlarmDeviceCommand.GetState(ref))) { result =>
+         completeJson(result)
+       }
      }
    }
  }

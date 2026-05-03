@@ -29,7 +29,7 @@ class AlarmDeviceController @Inject()(
   override def route: Route = pathPrefix("alarm_device") {
     (post & path("send" / Segment)) { stateArg =>
       val alarmState = AlarmState.valueOf(stateArg)
-      alarmPublisher.publisher.tell(AlarmDeviceState(alarmState, Instant.now))
+      alarmPublisher.publisher.tell(AlarmDeviceState(alarmState, Instant.now, Seq.empty))
       complete("ok")
     } ~ {
       onSuccess(alarmService.alarmDeviceRef.askWithStatus(ref => AlarmDeviceCommand.GetState(ref))) { result =>

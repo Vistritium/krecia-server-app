@@ -13,6 +13,7 @@ import java.time.Instant
 case class AlarmDeviceState(
   currentState: AlarmState,
   stateChange: Instant,
+  triggeredByAlarms: Seq[String],
 )
 
 @Singleton
@@ -30,11 +31,12 @@ class AlarmDevice @Inject()(
             replyTo ! StatusReply.Success(state)
             Behaviors.same
           }
-          case AlarmDeviceCommand.SetState(alarmState) => {
-            if (state.currentState != alarmState) {
+          case AlarmDeviceCommand.SetState(alarmState, triggeredByAlarms) => {
+            if (state.currentState != alarmState || state.triggeredByAlarms != triggeredByAlarms) {
               val newState = state.copy(
                 currentState = alarmState,
-                stateChange = Instant.now()
+                stateChange = Instant.now(),
+                triggeredByAlarms = triggeredByAlarms
               )
               statusChangesListeners.foreach(_ ! newState)
               alarmDeviceBehavior(newState)
@@ -46,7 +48,7 @@ class AlarmDevice @Inject()(
       }
     }
 
-    val state = AlarmDeviceState(OFF, Instant.now())
+    val state = AlarmDeviceState(OFF, Instant.now(), Seq.empty)
     statusChangesListeners.foreach(_ ! state)
     alarmDeviceBehavior(state)
 
@@ -60,7 +62,7 @@ trait AlarmDeviceCommand
 
 object AlarmDeviceCommand {
 
-  case class SetState(alarmState: AlarmState) extends AlarmDeviceCommand
+  case class SetState(alarmState: AlarmState, triggeredByAlarms: Seq[String] = Seq.empty) extends AlarmDeviceCommand
   case class GetState(replyTo: ActorRef[StatusReply[AlarmDeviceState]]) extends AlarmDeviceCommand
 
 }

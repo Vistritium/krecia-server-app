@@ -78,9 +78,9 @@ class AlarmDetectorBehavior @Inject()(
 
   private def applyState(alarmStateData: AlarmStateData): Unit = {
     if (alarmStateData.alarms.nonEmpty) {
-      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON)
+      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON, alarmStateData.alarms)
     } else {
-      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF)
+      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF, Seq.empty)
     }
   }
 }
