@@ -1,0 +1,1357 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/build.sbt b/build.sbt
+index a5326cb0a25f410a85e640ef798ffe83c33d4521..46fcec751e86e5a00ab87c7220717a08a1e880ca 100644
+--- a/build.sbt
++++ b/build.sbt
+@@ -1,48 +1,50 @@
+-name := "serverapp"
+-
+-version := "0.1"
+-
+-scalaVersion := "3.3.1"
+-val JacksonVersion = "2.16.1"
+-val AkkaVersion = "2.9.0"
+-
+-resolvers += "Akka library repository".at("https://repo.akka.io/maven")
+-
+-enablePlugins(JavaAppPackaging)
+-enablePlugins(DockerPlugin)
+-
+-libraryDependencies ++= Seq(
+-  "com.fasterxml.jackson.module" %% "jackson-module-scala" % JacksonVersion,
+-  "com.fasterxml.jackson.core" % "jackson-databind" % JacksonVersion,
+-  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % JacksonVersion,
+-  "com.google.guava" % "guava" % "33.0.0-jre",
+-  "org.apache.commons" % "commons-lang3" % "3.14.0",
+-  "commons-io" % "commons-io" % "2.15.1",
+-  "com.iheart" %% "ficus" % "1.5.2",
+-  "net.codingwell" %% "scala-guice" % "7.0.0",
+-  "com.google.inject.extensions" % "guice-assistedinject" % "7.0.0",
+-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+-  "ch.qos.logback" % "logback-classic" % "1.4.14",
+-  "net.harawata" % "appdirs" % "1.2.2",
+-  "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
+-  "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
+-  "com.typesafe.akka" %% "akka-slf4j" % AkkaVersion,
+-  "com.typesafe.akka" %% "akka-http" % "10.6.0",
+-  "com.lightbend.akka" %% "akka-stream-alpakka-mqtt" % "7.0.1",
+-  "org.reflections" % "reflections" % "0.10.2",
+-  "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
+-  "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.16.0",
+-  "com.twilio.sdk" % "twilio" % "9.15.0",
+-  "com.vonage" % "server-sdk" % "8.1.0",
+-  "org.scalatest" %% "scalatest" % "3.2.17" % Test,
+-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % AkkaVersion % Test
+-)
+-
+-enablePlugins(SbtTwirl)
+-
+-Compile/mainClass := Some("krecia.maciejnowicki.com.Main")
+-
+-dockerBaseImage := "eclipse-temurin:21-alpine"
+-dockerRepository := Some("server.krecia.maciejnowicki.com:5000")
+-dockerExposedPorts := Seq(8080)
+-dockerUpdateLatest := true
+\ No newline at end of file
++name := "serverapp"
++
++version := "0.1"
++
++scalaVersion := "3.3.1"
++val JacksonVersion = "2.16.1"
++val PekkoVersion = "1.1.3"
++val PekkoHttpVersion = "1.3.0"
++val PekkoConnectorsVersion = "1.3.0"
++
++resolvers += "Pekko repository".at("https://repo.akka.io/maven")
++
++enablePlugins(JavaAppPackaging)
++enablePlugins(DockerPlugin)
++
++libraryDependencies ++= Seq(
++  "com.fasterxml.jackson.module" %% "jackson-module-scala" % JacksonVersion,
++  "com.fasterxml.jackson.core" % "jackson-databind" % JacksonVersion,
++  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % JacksonVersion,
++  "com.google.guava" % "guava" % "33.0.0-jre",
++  "org.apache.commons" % "commons-lang3" % "3.14.0",
++  "commons-io" % "commons-io" % "2.15.1",
++  "com.iheart" %% "ficus" % "1.5.2",
++  "net.codingwell" %% "scala-guice" % "7.0.0",
++  "com.google.inject.extensions" % "guice-assistedinject" % "7.0.0",
++  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
++  "ch.qos.logback" % "logback-classic" % "1.4.14",
++  "net.harawata" % "appdirs" % "1.2.2",
++  "org.apache.pekko" % "pekko-actor_2.13" % PekkoVersion,
++  "org.apache.pekko" % "pekko-stream_2.13" % PekkoVersion,
++  "org.apache.pekko" % "pekko-slf4j_2.13" % PekkoVersion,
++  "org.apache.pekko" % "pekko-http_2.13" % PekkoHttpVersion,
++  "org.apache.pekko" % "pekko-connectors-mqtt_2.13" % PekkoConnectorsVersion,
++  "org.reflections" % "reflections" % "0.10.2",
++  "org.apache.pekko" % "pekko-actor-typed_2.13" % PekkoVersion,
++  "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.16.0",
++  "com.twilio.sdk" % "twilio" % "9.15.0",
++  "com.vonage" % "server-sdk" % "8.1.0",
++  "org.scalatest" %% "scalatest" % "3.2.17" % Test,
++  "org.apache.pekko" % "pekko-actor-testkit-typed_2.13" % PekkoVersion % Test
++)
++
++enablePlugins(SbtTwirl)
++
++Compile/mainClass := Some("krecia.maciejnowicki.com.Main")
++
++dockerBaseImage := "eclipse-temurin:21-alpine"
++dockerRepository := Some("server.krecia.maciejnowicki.com:5000")
++dockerExposedPorts := Seq(8080)
++dockerUpdateLatest := true
+diff --git a/src/main/scala/krecia/maciejnowicki/com/Main.scala b/src/main/scala/krecia/maciejnowicki/com/Main.scala
+index d0c519b3dd2d2188b6d0117684e800ab41a03db9..06adddd3a044c345818dc7a8ad09284654b308da 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/Main.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/Main.scala
+@@ -1,19 +1,19 @@
+-package krecia.maciejnowicki.com
+-
+-import com.google.inject.Guice
+-import krecia.maciejnowicki.com.configuration.MainModule
+-import krecia.maciejnowicki.com.web.WebServer
+-import com.typesafe.config.ConfigFactory
+-import krecia.maciejnowicki.com.notification.NotificationService
+-
+-object Main {
+-
+-  def main(args: Array[String]): Unit = {
+-    val config = ConfigFactory.load()
+-    val injector = Guice.createInjector(new MainModule(config))
+-    injector.getInstance(classOf[NotificationService]).criticalNotification
+-    injector.getInstance(classOf[Starter]).start()
+-    injector.getInstance(classOf[WebServer])
+-  }
+-
+-}
++package krecia.maciejnowicki.com
++
++import com.google.inject.Guice
++import krecia.maciejnowicki.com.configuration.MainModule
++import krecia.maciejnowicki.com.web.WebServer
++import com.typesafe.config.ConfigFactory
++import krecia.maciejnowicki.com.notification.NotificationService
++
++object Main {
++
++  def main(args: Array[String]): Unit = {
++    val config = ConfigFactory.load()
++    val injector = Guice.createInjector(new MainModule(config))
++    injector.getInstance(classOf[NotificationService]).criticalNotification
++    injector.getInstance(classOf[Starter]).start()
++    injector.getInstance(classOf[WebServer])
++  }
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/Starter.scala b/src/main/scala/krecia/maciejnowicki/com/Starter.scala
+index b461fc36624d5aca99f363787b8a95bce9b89996..fa01618498667303817712d0e8a7bfb236bcea01 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/Starter.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/Starter.scala
+@@ -1,33 +1,33 @@
+-package krecia.maciejnowicki.com
+-
+-import akka.actor.ActorSystem
+-import akka.stream.scaladsl.Sink
+-import com.google.inject.{Inject, Singleton}
+-import com.typesafe.config.Config
+-import com.typesafe.scalalogging.LazyLogging
+-import krecia.maciejnowicki.com.mqtt.MessagesService
+-import akka.actor.typed.scaladsl.adapter.*
+-import krecia.maciejnowicki.com.detector.{AlarmDetectorBehavior, AlarmDetectorCommand, AlarmDetectorService}
+-
+-@Singleton
+-class Starter @Inject()(
+-  config: Config,
+-  messagesService: MessagesService,
+-  actorSystem: ActorSystem,
+-  alarmDetector: AlarmDetectorBehavior,
+-  alarmDetectorService: AlarmDetectorService
+-) extends LazyLogging {
+-
+-  private implicit val implicitAs: ActorSystem = actorSystem
+-
+-  def start(): Unit = {
+-
+-    val run = messagesService.source
+-      .map(binaryState => AlarmDetectorCommand.BinaryStateEventCommand(binaryState))
+-      .to(Sink.actorRef(alarmDetectorService.alarmDetectorRef.toClassic, "unused", e => {
+-        logger.error("error", e)
+-      }))
+-      .run()
+-
+-  }
+-}
++package krecia.maciejnowicki.com
++
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.stream.scaladsl.Sink
++import com.google.inject.{Inject, Singleton}
++import com.typesafe.config.Config
++import com.typesafe.scalalogging.LazyLogging
++import krecia.maciejnowicki.com.mqtt.MessagesService
++import org.apache.pekko.actor.typed.scaladsl.adapter.*
++import krecia.maciejnowicki.com.detector.{AlarmDetectorBehavior, AlarmDetectorCommand, AlarmDetectorService}
++
++@Singleton
++class Starter @Inject()(
++  config: Config,
++  messagesService: MessagesService,
++  actorSystem: ActorSystem,
++  alarmDetector: AlarmDetectorBehavior,
++  alarmDetectorService: AlarmDetectorService
++) extends LazyLogging {
++
++  private implicit val implicitAs: ActorSystem = actorSystem
++
++  def start(): Unit = {
++
++    val run = messagesService.source
++      .map(binaryState => AlarmDetectorCommand.BinaryStateEventCommand(binaryState))
++      .to(Sink.actorRef(alarmDetectorService.alarmDetectorRef.toClassic, "unused", e => {
++        logger.error("error", e)
++      }))
++      .run()
++
++  }
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/TestAlertzyCall.scala b/src/main/scala/krecia/maciejnowicki/com/TestAlertzyCall.scala
+index 00462b3953a4a83aa7ae8b2ad116b0b619ad34e1..8a8b37c6cedfe74c2bcccc4e7b68e8252ad68a08 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/TestAlertzyCall.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/TestAlertzyCall.scala
+@@ -1,20 +1,20 @@
+-package krecia.maciejnowicki.com
+-
+-import com.google.inject.Guice
+-import com.typesafe.config.ConfigFactory
+-import krecia.maciejnowicki.com.configuration.MainModule
+-import krecia.maciejnowicki.com.integrations.Alertzy.AlertzyService
+-
+-import scala.concurrent.Await
+-import scala.concurrent.duration.*
+-
+-object TestAlertzyCall {
+-
+-  def main(args: Array[String]): Unit = {
+-    val config = ConfigFactory.load()
+-    val injector = Guice.createInjector(new MainModule(config))
+-    val service = injector.getInstance(classOf[AlertzyService])
+-    Await.result(service.send(), 10.seconds)
+-  }
+-
+-}
++package krecia.maciejnowicki.com
++
++import com.google.inject.Guice
++import com.typesafe.config.ConfigFactory
++import krecia.maciejnowicki.com.configuration.MainModule
++import krecia.maciejnowicki.com.integrations.Alertzy.AlertzyService
++
++import scala.concurrent.Await
++import scala.concurrent.duration.*
++
++object TestAlertzyCall {
++
++  def main(args: Array[String]): Unit = {
++    val config = ConfigFactory.load()
++    val injector = Guice.createInjector(new MainModule(config))
++    val service = injector.getInstance(classOf[AlertzyService])
++    Await.result(service.send(), 10.seconds)
++  }
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/TestTwilioCall.scala b/src/main/scala/krecia/maciejnowicki/com/TestTwilioCall.scala
+index 3b191f4893e0f1ebf9b1a1854a63057828d38a3f..6d6440bfd19ce2af157cd68481dc64cec0e5b187 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/TestTwilioCall.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/TestTwilioCall.scala
+@@ -1,18 +1,18 @@
+-package krecia.maciejnowicki.com
+-
+-import com.google.inject.Guice
+-import com.typesafe.config.ConfigFactory
+-import krecia.maciejnowicki.com.configuration.MainModule
+-import krecia.maciejnowicki.com.integrations.twilio.CallPhoneService
+-import krecia.maciejnowicki.com.web.WebServer
+-
+-object TestTwilioCall {
+-
+-  def main(args: Array[String]): Unit = {
+-    val config = ConfigFactory.load()
+-    val injector = Guice.createInjector(new MainModule(config))
+-    val service = injector.getInstance(classOf[CallPhoneService])
+-    service.call()
+-  }
+-
+-}
++package krecia.maciejnowicki.com
++
++import com.google.inject.Guice
++import com.typesafe.config.ConfigFactory
++import krecia.maciejnowicki.com.configuration.MainModule
++import krecia.maciejnowicki.com.integrations.twilio.CallPhoneService
++import krecia.maciejnowicki.com.web.WebServer
++
++object TestTwilioCall {
++
++  def main(args: Array[String]): Unit = {
++    val config = ConfigFactory.load()
++    val injector = Guice.createInjector(new MainModule(config))
++    val service = injector.getInstance(classOf[CallPhoneService])
++    service.call()
++  }
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/TestVonageCall.scala b/src/main/scala/krecia/maciejnowicki/com/TestVonageCall.scala
+index b3800df4ccf8f29578fb3628d5a972c12ca5e7aa..dd42ef512dbb782cfe8fcd1d0197b66c58b75446 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/TestVonageCall.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/TestVonageCall.scala
+@@ -1,19 +1,19 @@
+-package krecia.maciejnowicki.com
+-
+-import com.google.inject.Guice
+-import com.typesafe.config.ConfigFactory
+-import krecia.maciejnowicki.com.configuration.MainModule
+-import krecia.maciejnowicki.com.integrations.twilio.CallPhoneService
+-import krecia.maciejnowicki.com.integrations.vonage.VonageCallPhoneClient
+-import krecia.maciejnowicki.com.web.WebServer
+-
+-object TestVonageCall {
+-
+-  def main(args: Array[String]): Unit = {
+-    val config = ConfigFactory.load()
+-    val injector = Guice.createInjector(new MainModule(config))
+-    val service = injector.getInstance(classOf[VonageCallPhoneClient])
+-    service.call()
+-  }
+-
+-}
++package krecia.maciejnowicki.com
++
++import com.google.inject.Guice
++import com.typesafe.config.ConfigFactory
++import krecia.maciejnowicki.com.configuration.MainModule
++import krecia.maciejnowicki.com.integrations.twilio.CallPhoneService
++import krecia.maciejnowicki.com.integrations.vonage.VonageCallPhoneClient
++import krecia.maciejnowicki.com.web.WebServer
++
++object TestVonageCall {
++
++  def main(args: Array[String]): Unit = {
++    val config = ConfigFactory.load()
++    val injector = Guice.createInjector(new MainModule(config))
++    val service = injector.getInstance(classOf[VonageCallPhoneClient])
++    service.call()
++  }
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala
+index f3907cf42fa089a41cc3148d9a694696b695189f..b83a7f639b1810eea00f8d49dee91f4dd0b6deb2 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmDevice.scala
+@@ -1,30 +1,30 @@
+ package krecia.maciejnowicki.com.alarm
+ 
+-import akka.actor.typed.scaladsl.Behaviors
+-import akka.actor.typed.{ActorRef, Behavior}
+-import akka.pattern.StatusReply
++import org.apache.pekko.actor.typed.scaladsl.Behaviors
++import org.apache.pekko.actor.typed.{ActorRef, Behavior}
++import org.apache.pekko.pattern.StatusReply
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.detector.AlarmState
+ import krecia.maciejnowicki.com.detector.AlarmState.OFF
+ 
+ import java.time.Instant
+ 
+ case class AlarmDeviceState(
+   currentState: AlarmState,
+   stateChange: Instant,
+ )
+ 
+ @Singleton
+ class AlarmDevice @Inject()(
+   alarmPublisher: AlarmPublisher
+ ) extends LazyLogging {
+ 
+   def alarmDevice(): Behavior[AlarmDeviceCommand] = {
+     val statusChangesListeners: Seq[ActorRef[AlarmDeviceState]] = Seq(alarmPublisher.publisher)
+ 
+     def alarmDeviceBehavior(state: AlarmDeviceState): Behavior[AlarmDeviceCommand] = {
+       Behaviors.setup { context =>
+         Behaviors.receiveMessage {
+           case AlarmDeviceCommand.GetState(replyTo) => {
+             replyTo ! StatusReply.Success(state)
+diff --git a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmPublisher.scala b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmPublisher.scala
+index 902d37eeccef8eb97b746f8e52a4b95afe6e7c83..47ae37ea85cf45b90d3148eb08e436e0d7c16ffa 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmPublisher.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmPublisher.scala
+@@ -1,41 +1,41 @@
+ package krecia.maciejnowicki.com.alarm
+ 
+-import akka.Done
+-import akka.actor.ActorSystem
+-import akka.actor.typed.Behavior
+-import akka.actor.typed.scaladsl.Behaviors
+-import akka.stream.alpakka.mqtt.scaladsl.MqttSink
+-import akka.stream.alpakka.mqtt.{MqttMessage, MqttQoS}
+-import akka.stream.scaladsl.{RestartSink, Source}
+-import akka.stream.{CompletionStrategy, OverflowStrategy, RestartSettings}
+-import akka.util.ByteString
++import org.apache.pekko.Done
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.actor.typed.Behavior
++import org.apache.pekko.actor.typed.scaladsl.Behaviors
++import org.apache.pekko.stream.connectors.mqtt.scaladsl.MqttSink
++import org.apache.pekko.stream.connectors.mqtt.{MqttMessage, MqttQoS}
++import org.apache.pekko.stream.scaladsl.{RestartSink, Source}
++import org.apache.pekko.stream.{CompletionStrategy, OverflowStrategy, RestartSettings}
++import org.apache.pekko.util.ByteString
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.detector.AlarmState
+ import krecia.maciejnowicki.com.mqtt.MQTTConnection
+-import akka.actor.typed.scaladsl.adapter.*
++import org.apache.pekko.actor.typed.scaladsl.adapter.*
+ import scala.concurrent.duration._
+ 
+ @Singleton
+ class AlarmPublisher @Inject()(
+   MQTTConnection: MQTTConnection,
+   actorSystem: ActorSystem
+ ) extends LazyLogging {
+ 
+   private implicit val implicitAs: ActorSystem = actorSystem
+ 
+   private case class AlarmStateChange(
+     state: AlarmState,
+   )
+ 
+   val publisher = actorSystem.spawn(alarmPublisherBehaviour, "alarmPublisher")
+ 
+   private def alarmPublisherBehaviour: Behavior[AlarmDeviceState] = {
+ 
+     val source = Source.actorRef[AlarmStateChange](
+         completionMatcher = PartialFunction.empty,
+         failureMatcher = PartialFunction.empty,
+         2,
+         OverflowStrategy.dropHead
+       ).map { alarmStateChange =>
+         MqttMessage("alarm_device", ByteString(alarmStateChange.state.toString)).withRetained(true)
+diff --git a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmService.scala b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmService.scala
+index dfcf2d6a08436186ce109b94a81faedff67cfc8b..ba9a5fbdf62cc14ad37fbc2ba74c23987c01b5da 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmService.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/alarm/AlarmService.scala
+@@ -1,18 +1,18 @@
+ package krecia.maciejnowicki.com.alarm
+ 
+-import akka.actor.ActorSystem
+-import akka.actor.typed.{ActorRef, Behavior}
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.actor.typed.{ActorRef, Behavior}
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+-import akka.actor.typed.scaladsl.adapter.*
++import org.apache.pekko.actor.typed.scaladsl.adapter.*
+ 
+ @Singleton
+ class AlarmService @Inject()(
+   alarmPublisher: AlarmPublisher,
+   actorSystem: ActorSystem,
+   alarmDevice: AlarmDevice,
+ ) extends LazyLogging {
+ 
+   val alarmDeviceRef: ActorRef[AlarmDeviceCommand] = actorSystem.spawn(alarmDevice.alarmDevice(), "alarm-device")
+   
+ }
+\ No newline at end of file
+diff --git a/src/main/scala/krecia/maciejnowicki/com/configuration/AkkaModule.scala b/src/main/scala/krecia/maciejnowicki/com/configuration/AkkaModule.scala
+index ee9da1b5304adf871ef9669eddb0de09d837a59c..9e82118e5aa1a1ac251fb33f0e0552c513bd9ca7 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/configuration/AkkaModule.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/configuration/AkkaModule.scala
+@@ -1,25 +1,25 @@
+-package krecia.maciejnowicki.com.configuration
+-
+-import akka.actor.{ActorSystem, typed}
+-import akka.http.scaladsl.{Http, HttpExt}
+-import akka.stream.{ActorMaterializer, Materializer}
+-import com.google.inject.{AbstractModule, Provides, Singleton}
+-import net.codingwell.scalaguice.ScalaModule
+-import akka.actor.typed.scaladsl.adapter.*
+-
+-@Configuration
+-class AkkaModule extends AbstractModule {
+-
+-  @Provides
+-  @Singleton
+-  def system(): ActorSystem = ActorSystem()
+-
+-  @Provides
+-  @Singleton
+-  def typed(actorSystem: ActorSystem): akka.actor.typed.ActorSystem[Nothing] = actorSystem.toTyped
+-
+-  @Provides
+-  @Singleton
+-  def httpClient(actorSystem: ActorSystem): HttpExt = Http()(actorSystem)
+-
+-}
++package krecia.maciejnowicki.com.configuration
++
++import org.apache.pekko.actor.{ActorSystem, typed}
++import org.apache.pekko.http.scaladsl.{Http, HttpExt}
++import org.apache.pekko.stream.{ActorMaterializer, Materializer}
++import com.google.inject.{AbstractModule, Provides, Singleton}
++import net.codingwell.scalaguice.ScalaModule
++import org.apache.pekko.actor.typed.scaladsl.adapter.*
++
++@Configuration
++class AkkaModule extends AbstractModule {
++
++  @Provides
++  @Singleton
++  def system(): ActorSystem = ActorSystem()
++
++  @Provides
++  @Singleton
++  def typed(actorSystem: ActorSystem): org.apache.pekko.actor.typed.ActorSystem[Nothing] = actorSystem.toTyped
++
++  @Provides
++  @Singleton
++  def httpClient(actorSystem: ActorSystem): HttpExt = Http()(actorSystem)
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/configuration/MainModule.scala b/src/main/scala/krecia/maciejnowicki/com/configuration/MainModule.scala
+index 6c13d34e606aed6b80c4010277ff049babeb5040..76babfeb4c4f787c5f1a88e99af78354fbcb1571 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/configuration/MainModule.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/configuration/MainModule.scala
+@@ -1,54 +1,54 @@
+-package krecia.maciejnowicki.com.configuration
+-
+-import akka.actor.ActorSystem
+-import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, SerializationFeature}
+-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+-import com.fasterxml.jackson.module.scala.DefaultScalaModule
+-import com.github.pjfanning.`enum`.EnumModule
+-import com.google.inject.{AbstractModule, Provides, Singleton}
+-import com.typesafe.config.Config
+-import com.typesafe.scalalogging.LazyLogging
+-import krecia.maciejnowicki.com.web.ControllerDeps
+-import net.codingwell.scalaguice.ScalaModule
+-import org.reflections.Reflections
+-
+-import scala.concurrent.ExecutionContext
+-
+-class MainModule(config: Config) extends AbstractModule with LazyLogging {
+-
+-  override def configure(): Unit =
+-    new Reflections("krecia.maciejnowicki.com")
+-      .getTypesAnnotatedWith(classOf[Configuration])
+-      .forEach { c =>
+-        logger.debug(s"Installing $c")
+-        install(c.newInstance().asInstanceOf[AbstractModule])
+-      }
+-
+-  @Provides
+-  @Singleton
+-  def provideConfig(): Config = config
+-
+-  @Provides
+-  @Singleton
+-  def mapper(): ObjectMapper = {
+-    val mapper = new ObjectMapper()
+-    mapper.registerModule(DefaultScalaModule)
+-    mapper.registerModule(EnumModule)
+-    mapper.registerModule(new JavaTimeModule())
+-    mapper.enable(SerializationFeature.INDENT_OUTPUT)
+-    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+-    mapper.enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+-    mapper.enable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
+-    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+-    mapper
+-  }
+-
+-  @Provides
+-  @Singleton
+-  def executionContext(actorSystem: ActorSystem): ExecutionContext = actorSystem.dispatcher
+-
+-  @Provides
+-  @Singleton
+-  def controllerDeps(mapper: ObjectMapper): ControllerDeps = ControllerDeps(mapper)
+-
+-}
++package krecia.maciejnowicki.com.configuration
++
++import org.apache.pekko.actor.ActorSystem
++import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper, SerializationFeature}
++import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
++import com.fasterxml.jackson.module.scala.DefaultScalaModule
++import com.github.pjfanning.`enum`.EnumModule
++import com.google.inject.{AbstractModule, Provides, Singleton}
++import com.typesafe.config.Config
++import com.typesafe.scalalogging.LazyLogging
++import krecia.maciejnowicki.com.web.ControllerDeps
++import net.codingwell.scalaguice.ScalaModule
++import org.reflections.Reflections
++
++import scala.concurrent.ExecutionContext
++
++class MainModule(config: Config) extends AbstractModule with LazyLogging {
++
++  override def configure(): Unit =
++    new Reflections("krecia.maciejnowicki.com")
++      .getTypesAnnotatedWith(classOf[Configuration])
++      .forEach { c =>
++        logger.debug(s"Installing $c")
++        install(c.newInstance().asInstanceOf[AbstractModule])
++      }
++
++  @Provides
++  @Singleton
++  def provideConfig(): Config = config
++
++  @Provides
++  @Singleton
++  def mapper(): ObjectMapper = {
++    val mapper = new ObjectMapper()
++    mapper.registerModule(DefaultScalaModule)
++    mapper.registerModule(EnumModule)
++    mapper.registerModule(new JavaTimeModule())
++    mapper.enable(SerializationFeature.INDENT_OUTPUT)
++    mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
++    mapper.enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
++    mapper.enable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES)
++    mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
++    mapper
++  }
++
++  @Provides
++  @Singleton
++  def executionContext(actorSystem: ActorSystem): ExecutionContext = actorSystem.dispatcher
++
++  @Provides
++  @Singleton
++  def controllerDeps(mapper: ObjectMapper): ControllerDeps = ControllerDeps(mapper)
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala b/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala
+index ed0baee29fdcca80dbd9843ca765a19eb59b38c9..7ae4e420a6d7b5c6829e1794a3ac5bb90970c2a7 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorBehavior.scala
+@@ -1,30 +1,30 @@
+ package krecia.maciejnowicki.com.detector
+ 
+-import akka.actor.typed.{ActorRef, Behavior}
+-import akka.actor.typed.scaladsl.Behaviors
+-import akka.pattern.StatusReply
++import org.apache.pekko.actor.typed.{ActorRef, Behavior}
++import org.apache.pekko.actor.typed.scaladsl.Behaviors
++import org.apache.pekko.pattern.StatusReply
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmService}
+ import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
+ import krecia.maciejnowicki.com.detector.AlarmState.OFF
+ import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
+ 
+ import scala.concurrent.Future
+ import scala.concurrent.duration.*
+ 
+ @Singleton
+ class AlarmDetectorBehavior @Inject()(
+   alarmDetectorFormula: AlarmDetectorFormula,
+   alarmService: AlarmService,
+ ) extends LazyLogging {
+ 
+   private case class State(alarmStateManager: AlarmStateManager, alarmData: AlarmStateData)
+ 
+   def alarmDetector(): Behavior[AlarmDetectorCommand] = {
+     alarmDetectorBehaviour(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty)))
+   }
+   
+   private def teeest = {
+     Behaviors.setup[String] { context => 
+       
+diff --git a/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorService.scala b/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorService.scala
+index edb6196effce4a2a1442eed39832f042d677151f..cb8f661c9c1c60aeb5e5ddabe36a30ab32867020 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorService.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/detector/AlarmDetectorService.scala
+@@ -1,16 +1,16 @@
+ package krecia.maciejnowicki.com.detector
+ 
+-import akka.actor.ActorSystem
+-import akka.actor.typed.scaladsl.adapter.*
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.actor.typed.scaladsl.adapter.*
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ 
+ @Singleton
+ class AlarmDetectorService @Inject()(
+   actorSystem: ActorSystem,
+   alarmDetector: AlarmDetectorBehavior,
+ ) extends LazyLogging {
+ 
+   val alarmDetectorRef = actorSystem.spawn(alarmDetector.alarmDetector(), "alarmDetector")
+ 
+ }
+diff --git a/src/main/scala/krecia/maciejnowicki/com/integrations/Alertzy/AlertzyService.scala b/src/main/scala/krecia/maciejnowicki/com/integrations/Alertzy/AlertzyService.scala
+index 5c2fadfa4f05f771be3d216f054734227b4509f1..f19d2dc28f004d4b85f6521489a7a1540b640b68 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/integrations/Alertzy/AlertzyService.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/integrations/Alertzy/AlertzyService.scala
+@@ -1,30 +1,30 @@
+ package krecia.maciejnowicki.com.integrations.Alertzy
+ 
+-import akka.actor.ActorSystem
+-import akka.http.scaladsl.HttpExt
+-import akka.http.scaladsl.model.*
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.http.scaladsl.HttpExt
++import org.apache.pekko.http.scaladsl.model.*
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.config.Config
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.integrations.CriticalNotificationIntegration
+ 
+ import scala.concurrent.duration.*
+ import scala.concurrent.{ExecutionContext, Future}
+ import scala.jdk.CollectionConverters.*
+ 
+ @Singleton
+ class AlertzyService @Inject()(
+   config: Config,
+   httpExt: HttpExt,
+   ec: ExecutionContext,
+   as: ActorSystem,
+ ) extends CriticalNotificationIntegration with LazyLogging {
+ 
+   private implicit val implicitEc: ExecutionContext = ec
+   private implicit val implicitAs: ActorSystem = as
+ 
+   private val accountIds = config.getStringList("alertzy.accountIds").asScala
+ 
+   override def send(): Future[Unit] = {
+ 
+     for {
+diff --git a/src/main/scala/krecia/maciejnowicki/com/integrations/twilio/CallPhoneService.scala b/src/main/scala/krecia/maciejnowicki/com/integrations/twilio/CallPhoneService.scala
+index 0257124ad16739e1216f0aecdb38a18df68e3130..a3806ca495d766abcb0dc0f89cf8ca4342f1f852 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/integrations/twilio/CallPhoneService.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/integrations/twilio/CallPhoneService.scala
+@@ -1,30 +1,30 @@
+ package krecia.maciejnowicki.com.integrations.twilio
+ 
+-import akka.Done
+-import akka.actor.ActorSystem
+-import akka.stream.scaladsl.{Sink, Source}
++import org.apache.pekko.Done
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.stream.scaladsl.{Sink, Source}
+ import com.google.inject.{Inject, Singleton}
+ import com.twilio.http.TwilioRestClient
+ import com.twilio.rest.api.v2010.account.Call
+ import com.typesafe.config.Config
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.integrations.CriticalNotificationIntegration
+ 
+ import java.net.URI
+ import scala.concurrent.{ExecutionContext, Future}
+ import scala.jdk.CollectionConverters.*
+ import scala.util.{Failure, Success}
+ 
+ @Singleton
+ class CallPhoneService @Inject()(
+   config: Config,
+   ec: ExecutionContext,
+   ak: ActorSystem,
+ ) extends CriticalNotificationIntegration with LazyLogging {
+ 
+   private implicit val implicitAs: ActorSystem = ak
+ 
+   private case class TwilioConfig(
+     name: String,
+     phone: String,
+     sid: String,
+diff --git a/src/main/scala/krecia/maciejnowicki/com/mqtt/MQTTConnection.scala b/src/main/scala/krecia/maciejnowicki/com/mqtt/MQTTConnection.scala
+index 0b090d35353c451489399f867a2139a1c9b05124..2c6886b938a3d7205dbf77b993bbfa67f9e122d0 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/mqtt/MQTTConnection.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/mqtt/MQTTConnection.scala
+@@ -1,22 +1,22 @@
+ package krecia.maciejnowicki.com.mqtt
+ 
+-import akka.stream.alpakka.mqtt.MqttConnectionSettings
++import org.apache.pekko.stream.connectors.mqtt.MqttConnectionSettings
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.config.Config
+ import com.typesafe.scalalogging.LazyLogging
+ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+ 
+ @Singleton
+ class MQTTConnection @Inject()(
+   config: Config,
+ ) extends LazyLogging {
+ 
+   private val prefix: String = config.getString("mqttClientPrefix")
+   def connectionSettings(clientId: String): MqttConnectionSettings = MqttConnectionSettings(
+     "tcp://server.krecia.maciejnowicki.com:1883",
+     prefix + clientId,
+     new MemoryPersistence
+   )
+     .withAutomaticReconnect(false)
+ 
+ }
+diff --git a/src/main/scala/krecia/maciejnowicki/com/mqtt/MessagesService.scala b/src/main/scala/krecia/maciejnowicki/com/mqtt/MessagesService.scala
+index 8b16e55012fe8b494799ad276cfcb3ef17189a14..eec86a7e8ceee82ca82696ce3fcc094ab12cf7ee 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/mqtt/MessagesService.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/mqtt/MessagesService.scala
+@@ -1,33 +1,33 @@
+ package krecia.maciejnowicki.com.mqtt
+ 
+-import akka.{Done, NotUsed}
+-import akka.actor.ActorSystem
+-import akka.stream.RestartSettings
+-import akka.stream.alpakka.mqtt.{MqttConnectionSettings, MqttMessage, MqttQoS, MqttSubscriptions}
+-import akka.stream.alpakka.mqtt.scaladsl.MqttSource
+-import akka.stream.scaladsl.{RestartSource, Source}
++import org.apache.pekko.{Done, NotUsed}
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.stream.RestartSettings
++import org.apache.pekko.stream.connectors.mqtt.{MqttConnectionSettings, MqttMessage, MqttQoS, MqttSubscriptions}
++import org.apache.pekko.stream.connectors.mqtt.scaladsl.MqttSource
++import org.apache.pekko.stream.scaladsl.{RestartSource, Source}
+ import com.fasterxml.jackson.databind.ObjectMapper
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+ 
+ import scala.concurrent.duration.*
+ import scala.concurrent.{Await, ExecutionContext, Future}
+ import scala.util.{Failure, Success}
+ 
+ @Singleton
+ class MessagesService @Inject()(
+   as: ActorSystem,
+   ec: ExecutionContext,
+   mapper: ObjectMapper,
+   MQTTConnection: MQTTConnection,
+ ) extends LazyLogging {
+ 
+   private implicit val implicitEc: ExecutionContext = ec
+   private implicit val implicitAs: ActorSystem = as
+ 
+ 
+ 
+   def source: Source[BinaryStateEvent, NotUsed] = {
+     val settings = RestartSettings(
+       minBackoff = 3.seconds,
+diff --git a/src/main/scala/krecia/maciejnowicki/com/notification/NotificationService.scala b/src/main/scala/krecia/maciejnowicki/com/notification/NotificationService.scala
+index 9cf3cdf8402d4f0f77a632e45d18fa2ec0f70a29..b6f0417d4104c670987ac1a924589327ccec3767 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/notification/NotificationService.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/notification/NotificationService.scala
+@@ -1,42 +1,42 @@
+ package krecia.maciejnowicki.com.notification
+ 
+-import akka.NotUsed
+-import akka.actor.ActorSystem
+-import akka.actor.typed.{ActorRef, Behavior}
+-import akka.actor.typed.scaladsl.Behaviors
++import org.apache.pekko.NotUsed
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.actor.typed.{ActorRef, Behavior}
++import org.apache.pekko.actor.typed.scaladsl.Behaviors
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.integrations.twilio.CallPhoneService
+ 
+ import scala.concurrent.{ExecutionContext, Future}
+ import scala.util.{Failure, Success}
+-import akka.actor.typed.scaladsl.adapter.*
+-import akka.stream.RestartSettings
+-import akka.stream.alpakka.mqtt.{MqttQoS, MqttSubscriptions}
+-import akka.stream.alpakka.mqtt.scaladsl.MqttSource
+-import akka.stream.scaladsl.{RestartSource, Source}
++import org.apache.pekko.actor.typed.scaladsl.adapter.*
++import org.apache.pekko.stream.RestartSettings
++import org.apache.pekko.stream.connectors.mqtt.{MqttQoS, MqttSubscriptions}
++import org.apache.pekko.stream.connectors.mqtt.scaladsl.MqttSource
++import org.apache.pekko.stream.scaladsl.{RestartSource, Source}
+ import com.typesafe.config.Config
+ import krecia.maciejnowicki.com.integrations.CriticalNotificationIntegration
+ import krecia.maciejnowicki.com.mqtt.MQTTConnection
+ 
+ import scala.concurrent.duration.*
+ 
+ @Singleton
+ class NotificationService @Inject()(
+   criticalNotificationIntegration: CriticalNotificationIntegration,
+   ec: ExecutionContext,
+   actorSystem: ActorSystem,
+   config: Config,
+   MQTTConnection: MQTTConnection
+ ) extends LazyLogging {
+ 
+   private implicit val implicitEc: ExecutionContext = ec
+   private implicit val implicitAs: ActorSystem = actorSystem
+ 
+   private val enabled = config.getBoolean("notification.enabled")
+ 
+   private case class State(
+     enabled: Boolean
+   )
+ 
+   private def source: Source[String, NotUsed] = {
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/Controller.scala b/src/main/scala/krecia/maciejnowicki/com/web/Controller.scala
+index fe00eceb633d284ae12f373895ea8f42b638f623..6da1d45db2dcfd5d4bc06c5dd10fa3c371bdaec7 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/Controller.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/Controller.scala
+@@ -1,37 +1,37 @@
+-package krecia.maciejnowicki.com.web
+-
+-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
+-import akka.http.scaladsl.server.Directives.*
+-import akka.http.scaladsl.server.{Directive1, Route}
+-import akka.util.Timeout
+-import com.fasterxml.jackson.databind.ObjectMapper
+-import com.google.inject.Inject
+-import com.typesafe.scalalogging.LazyLogging
+-
+-import scala.concurrent.duration.*
+-import scala.util.{Failure, Success, Try}
+-
+-
+-case class ControllerDeps(
+-  mapper: ObjectMapper
+-)
+-@DiscoverableController
+-abstract class Controller(controllerDeps: ControllerDeps) extends LazyLogging {
+-
+-  protected implicit val timeout: Timeout = Timeout(1.hour)
+-
+-  def route: Route
+-
+-  def handleFutureError[T](dir: Directive1[Try[T]])(next: T => Route): Route = {
+-    dir {
+-      case Failure(exception) => {
+-        logger.debug("futureError", exception)
+-        complete(HttpResponse(status = StatusCodes.InternalServerError, entity = s"${exception.getMessage}"))
+-      }
+-      case Success(value) => next(value)
+-    }
+-  }
+-
+-  def completeJson(obj: Any) = complete(HttpEntity(ContentTypes.`application/json`, controllerDeps.mapper.writeValueAsString(obj)))
+-
+-}
++package krecia.maciejnowicki.com.web
++
++import org.apache.pekko.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
++import org.apache.pekko.http.scaladsl.server.Directives.*
++import org.apache.pekko.http.scaladsl.server.{Directive1, Route}
++import org.apache.pekko.util.Timeout
++import com.fasterxml.jackson.databind.ObjectMapper
++import com.google.inject.Inject
++import com.typesafe.scalalogging.LazyLogging
++
++import scala.concurrent.duration.*
++import scala.util.{Failure, Success, Try}
++
++
++case class ControllerDeps(
++  mapper: ObjectMapper
++)
++@DiscoverableController
++abstract class Controller(controllerDeps: ControllerDeps) extends LazyLogging {
++
++  protected implicit val timeout: Timeout = Timeout(1.hour)
++
++  def route: Route
++
++  def handleFutureError[T](dir: Directive1[Try[T]])(next: T => Route): Route = {
++    dir {
++      case Failure(exception) => {
++        logger.debug("futureError", exception)
++        complete(HttpResponse(status = StatusCodes.InternalServerError, entity = s"${exception.getMessage}"))
++      }
++      case Success(value) => next(value)
++    }
++  }
++
++  def completeJson(obj: Any) = complete(HttpEntity(ContentTypes.`application/json`, controllerDeps.mapper.writeValueAsString(obj)))
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/TwirlController.scala b/src/main/scala/krecia/maciejnowicki/com/web/TwirlController.scala
+index 55736dab20146608282961c17e0db745af0d7ab7..cf1ba6c619795f3e5d6769fda2bef8a3d18ed0db 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/TwirlController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/TwirlController.scala
+@@ -1,17 +1,17 @@
+-package krecia.maciejnowicki.com.web
+-
+-import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
+-import akka.http.scaladsl.model.MediaType
+-import akka.http.scaladsl.model.MediaTypes.{`text/html`, `text/plain`, `text/xml`}
+-import play.twirl.api.{Html, Txt, Xml}
+-
+-abstract class TwirlController(controllerDeps: ControllerDeps) extends Controller(controllerDeps) {
+-
+-  protected implicit val twirlHtmlMarshaller: ToEntityMarshaller[Html] = twirlMarshaller[Html](`text/html`)
+-  protected implicit val twirlTxtMarshaller: ToEntityMarshaller[Txt] = twirlMarshaller[Txt](`text/plain`)
+-  protected implicit val twirlXmlMarshaller: ToEntityMarshaller[Xml] = twirlMarshaller[Xml](`text/xml`)
+-
+-  protected def twirlMarshaller[A <: AnyRef : Manifest](contentType: MediaType): ToEntityMarshaller[A] =
+-    Marshaller.StringMarshaller.wrap(contentType)(_.toString)
+-
+-}
++package krecia.maciejnowicki.com.web
++
++import org.apache.pekko.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
++import org.apache.pekko.http.scaladsl.model.MediaType
++import org.apache.pekko.http.scaladsl.model.MediaTypes.{`text/html`, `text/plain`, `text/xml`}
++import play.twirl.api.{Html, Txt, Xml}
++
++abstract class TwirlController(controllerDeps: ControllerDeps) extends Controller(controllerDeps) {
++
++  protected implicit val twirlHtmlMarshaller: ToEntityMarshaller[Html] = twirlMarshaller[Html](`text/html`)
++  protected implicit val twirlTxtMarshaller: ToEntityMarshaller[Txt] = twirlMarshaller[Txt](`text/plain`)
++  protected implicit val twirlXmlMarshaller: ToEntityMarshaller[Xml] = twirlMarshaller[Xml](`text/xml`)
++
++  protected def twirlMarshaller[A <: AnyRef : Manifest](contentType: MediaType): ToEntityMarshaller[A] =
++    Marshaller.StringMarshaller.wrap(contentType)(_.toString)
++
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/WebServer.scala b/src/main/scala/krecia/maciejnowicki/com/web/WebServer.scala
+index 74620fef5ce2e1b96e5ef5468b6b95c9820ffc72..d1de53c4ed6d6bd2405203d19108df173605e89c 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/WebServer.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/WebServer.scala
+@@ -1,47 +1,47 @@
+-package krecia.maciejnowicki.com.web
+-
+-import java.lang.reflect.Modifier
+-
+-import akka.actor.ActorSystem
+-import akka.http.scaladsl.Http
+-import com.google.inject.{Inject, Injector, Singleton}
+-import com.typesafe.config.Config
+-import com.typesafe.scalalogging.LazyLogging
+-import org.reflections.Reflections
+-import org.reflections.scanners.{SubTypesScanner, TypeAnnotationsScanner}
+-import org.reflections.util.{ClasspathHelper, ConfigurationBuilder}
+-import akka.http.scaladsl.server.Directives._
+-
+-import collection.JavaConverters._
+-import scala.concurrent.ExecutionContext
+-
+-@Singleton
+-class WebServer @Inject()(
+-  executionContext: ExecutionContext,
+-  actorSystem: ActorSystem,
+-  config: Config,
+-  injector: Injector
+-) extends LazyLogging {
+-
+-  private implicit val implicitEc: ExecutionContext = executionContext
+-  private implicit val implicitAs: ActorSystem = actorSystem
+-
+-  private val controllers: List[Controller] = {
+-    val reflections = new Reflections(new ConfigurationBuilder()
+-      .setUrls(ClasspathHelper.forPackage(getClass.getPackage.getName))
+-      .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner))
+-    val set = reflections.getTypesAnnotatedWith(classOf[DiscoverableController]).asScala
+-      .filterNot(c => Modifier.isAbstract(c.getModifiers))
+-    logger.info(s"Found following controllers: ${set.mkString("\n", "\n", "")}")
+-    set.map(c => injector.getInstance(c).asInstanceOf[Controller]).toList
+-  }
+-
+-  require(controllers.nonEmpty)
+-  private val route = controllers.map(_.route).reduce(_ ~ _)
+-
+-  private val bindingFuture: Unit = {
+-    val port: Int = config.getInt("web.port")
+-    Http().bindAndHandle(route, "0.0.0.0", port)
+-    logger.info(s"Server started on port $port")
+-  }
++package krecia.maciejnowicki.com.web
++
++import java.lang.reflect.Modifier
++
++import org.apache.pekko.actor.ActorSystem
++import org.apache.pekko.http.scaladsl.Http
++import com.google.inject.{Inject, Injector, Singleton}
++import com.typesafe.config.Config
++import com.typesafe.scalalogging.LazyLogging
++import org.reflections.Reflections
++import org.reflections.scanners.{SubTypesScanner, TypeAnnotationsScanner}
++import org.reflections.util.{ClasspathHelper, ConfigurationBuilder}
++import org.apache.pekko.http.scaladsl.server.Directives._
++
++import collection.JavaConverters._
++import scala.concurrent.ExecutionContext
++
++@Singleton
++class WebServer @Inject()(
++  executionContext: ExecutionContext,
++  actorSystem: ActorSystem,
++  config: Config,
++  injector: Injector
++) extends LazyLogging {
++
++  private implicit val implicitEc: ExecutionContext = executionContext
++  private implicit val implicitAs: ActorSystem = actorSystem
++
++  private val controllers: List[Controller] = {
++    val reflections = new Reflections(new ConfigurationBuilder()
++      .setUrls(ClasspathHelper.forPackage(getClass.getPackage.getName))
++      .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner))
++    val set = reflections.getTypesAnnotatedWith(classOf[DiscoverableController]).asScala
++      .filterNot(c => Modifier.isAbstract(c.getModifiers))
++    logger.info(s"Found following controllers: ${set.mkString("\n", "\n", "")}")
++    set.map(c => injector.getInstance(c).asInstanceOf[Controller]).toList
++  }
++
++  require(controllers.nonEmpty)
++  private val route = controllers.map(_.route).reduce(_ ~ _)
++
++  private val bindingFuture: Unit = {
++    val port: Int = config.getInt("web.port")
++    Http().bindAndHandle(route, "0.0.0.0", port)
++    logger.info(s"Server started on port $port")
++  }
+ }
+\ No newline at end of file
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
+index 7e6aaf36aa6d5de023ddee244271fa284b96e780..6dc8f53b4b0ad608c7d4fe90f0c5250f3a7ca745 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
+@@ -1,36 +1,36 @@
+ package krecia.maciejnowicki.com.web.controllers
+ 
+-import akka.actor.typed.ActorSystem
+-import akka.http.scaladsl.server.Route
++import org.apache.pekko.actor.typed.ActorSystem
++import org.apache.pekko.http.scaladsl.server.Route
+ import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
+-import akka.http.scaladsl.server.Directives.*
++import org.apache.pekko.http.scaladsl.server.Directives.*
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.detector.{AlarmDetectorCommand, AlarmDetectorService}
+-import akka.actor.typed.scaladsl.AskPattern.*
+-import akka.util.Timeout
++import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
++import org.apache.pekko.util.Timeout
+ import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
+ import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
+ 
+ import java.time.Instant
+ import scala.concurrent.duration.*
+ 
+ @DiscoverableController
+ @Singleton
+ class AlarmDetectorController @Inject()(
+   controllerDeps: ControllerDeps,
+   alarmDetectorService: AlarmDetectorService,
+   actorSystem: ActorSystem[Nothing]
+ ) extends Controller(controllerDeps) {
+ 
+   private implicit val timeout: Timeout = 3.seconds
+   private implicit val implicitAs: ActorSystem[_] = actorSystem
+ 
+   override def route: Route = pathPrefix("alarm_detector") {
+     get {
+       onSuccess(alarmDetectorService.alarmDetectorRef.askWithStatus[GetStateReply](ref => AlarmDetectorCommand.GetState(ref))) { success =>
+         completeJson(success.alarmData)
+       }
+     } ~ (path(Segment) & post) { toState =>
+ 
+       val from = if (toState == "OFF") {
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala
+index 975365d0dd4ca6703e485d1e448532d30ff0a69c..0fa77d6d6d9ad62e1151df147a13a30337e7c19a 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDeviceController.scala
+@@ -1,38 +1,38 @@
+ package krecia.maciejnowicki.com.web.controllers
+ 
+-import akka.actor.typed.ActorSystem
+-import akka.http.scaladsl.server.Directives.path
+-import akka.http.scaladsl.server.Route
++import org.apache.pekko.actor.typed.ActorSystem
++import org.apache.pekko.http.scaladsl.server.Directives.path
++import org.apache.pekko.http.scaladsl.server.Route
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
+-import akka.http.scaladsl.server.Directives.*
++import org.apache.pekko.http.scaladsl.server.Directives.*
+ import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmDeviceState, AlarmPublisher, AlarmService}
+ import krecia.maciejnowicki.com.detector.AlarmState
+-import akka.actor.typed.scaladsl.AskPattern.*
+-import akka.pattern.StatusReply
++import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
++import org.apache.pekko.pattern.StatusReply
+ 
+ import java.time.Instant
+ 
+ @Singleton
+ @DiscoverableController
+ class AlarmDeviceController @Inject()(
+   controllerDeps: ControllerDeps,
+   alarmPublisher: AlarmPublisher,
+   alarmService: AlarmService,
+   actorSystem: ActorSystem[Nothing],
+ ) extends Controller(controllerDeps) with LazyLogging {
+ 
+   implicit val implicitAk: ActorSystem[Nothing] = actorSystem
+ 
+ 
+   override def route: Route = pathPrefix("alarm_device") {
+     (post & path("send" / Segment)) { stateArg =>
+       val alarmState = AlarmState.valueOf(stateArg)
+       alarmPublisher.publisher.tell(AlarmDeviceState(alarmState, Instant.now))
+       complete("ok")
+     } ~ {
+       onSuccess(alarmService.alarmDeviceRef.askWithStatus(ref => AlarmDeviceCommand.GetState(ref))) { result =>
+         completeJson(result)
+       }
+     }
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/ResourcesController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/ResourcesController.scala
+index 4209a1ec349d45b3a62894804665d4be6cf27a59..47fa5f621e687d16b981490a3727b6baa4323878 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/ResourcesController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/ResourcesController.scala
+@@ -1,28 +1,28 @@
+-package krecia.maciejnowicki.com.web.controllers
+-
+-import akka.http.scaladsl.server.Route
+-import com.google.inject.{Inject, Singleton}
+-import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
+-import com.typesafe.scalalogging.LazyLogging
+-import akka.http.scaladsl.model.headers.*
+-import akka.http.scaladsl.model.headers.CacheDirectives.*
+-import akka.http.scaladsl.server.Directives.*
+-
+-import scala.concurrent.duration.*
+-
+-@Singleton
+-@DiscoverableController
+-class ResourcesController @Inject()(
+-  controllerDeps: ControllerDeps,
+-) extends Controller(controllerDeps) with LazyLogging {
+-  override def route: Route =
+-    respondWithHeader(`Cache-Control`(`public`, `max-age`(1.hour.toSeconds))) {
+-      pathPrefix("web") {
+-        getFromResourceDirectory("web", getClass.getClassLoader)
+-      } ~ get {
+-        pathPrefix("favicon.ico") {
+-          getFromResource("web/favicon.ico")
+-        }
+-      }
+-    }
+-}
++package krecia.maciejnowicki.com.web.controllers
++
++import org.apache.pekko.http.scaladsl.server.Route
++import com.google.inject.{Inject, Singleton}
++import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
++import com.typesafe.scalalogging.LazyLogging
++import org.apache.pekko.http.scaladsl.model.headers.*
++import org.apache.pekko.http.scaladsl.model.headers.CacheDirectives.*
++import org.apache.pekko.http.scaladsl.server.Directives.*
++
++import scala.concurrent.duration.*
++
++@Singleton
++@DiscoverableController
++class ResourcesController @Inject()(
++  controllerDeps: ControllerDeps,
++) extends Controller(controllerDeps) with LazyLogging {
++  override def route: Route =
++    respondWithHeader(`Cache-Control`(`public`, `max-age`(1.hour.toSeconds))) {
++      pathPrefix("web") {
++        getFromResourceDirectory("web", getClass.getClassLoader)
++      } ~ get {
++        pathPrefix("favicon.ico") {
++          getFromResource("web/favicon.ico")
++        }
++      }
++    }
++}
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/twirl/HiController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/twirl/HiController.scala
+index ee93bdf870d822af955c38e95df00c091fbd90be..0ff479e97b5527431adb035617b5c5c8383f8e80 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/twirl/HiController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/twirl/HiController.scala
+@@ -1,19 +1,19 @@
+-package krecia.maciejnowicki.com.web.controllers.twirl
+-
+-import akka.http.scaladsl.server.Directives.*
+-import akka.http.scaladsl.server.Route
+-import com.google.inject.{Inject, Singleton}
+-import krecia.maciejnowicki.com.detector.AlarmDetectorService
+-import krecia.maciejnowicki.com.web.{ControllerDeps, DiscoverableController, TwirlController}
+-
+-@Singleton
+-@DiscoverableController
+-class HiController @Inject()(
+-  controllerDeps: ControllerDeps,
+-) extends TwirlController(controllerDeps) {
+-  override def route: Route = pathSingleSlash {
+-    get {
+-      complete(html.index.render())
+-    }
+-  }
+-}
++package krecia.maciejnowicki.com.web.controllers.twirl
++
++import org.apache.pekko.http.scaladsl.server.Directives.*
++import org.apache.pekko.http.scaladsl.server.Route
++import com.google.inject.{Inject, Singleton}
++import krecia.maciejnowicki.com.detector.AlarmDetectorService
++import krecia.maciejnowicki.com.web.{ControllerDeps, DiscoverableController, TwirlController}
++
++@Singleton
++@DiscoverableController
++class HiController @Inject()(
++  controllerDeps: ControllerDeps,
++) extends TwirlController(controllerDeps) {
++  override def route: Route = pathSingleSlash {
++    get {
++      complete(html.index.render())
++    }
++  }
++}
+diff --git a/src/test/scala/krecia/maciejnowicki/com/detector/AlarmDetectorTest.scala b/src/test/scala/krecia/maciejnowicki/com/detector/AlarmDetectorTest.scala
+index eeee4a20278ed3e03b349cdd6ebc15c6635fdce0..90ad90cd6893cf6f389521da1f7e2495382bec33 100644
+--- a/src/test/scala/krecia/maciejnowicki/com/detector/AlarmDetectorTest.scala
++++ b/src/test/scala/krecia/maciejnowicki/com/detector/AlarmDetectorTest.scala
+@@ -1,29 +1,29 @@
+ package krecia.maciejnowicki.com.detector
+ 
+-import akka.actor.testkit.typed.scaladsl.{BehaviorTestKit, ReplyInbox}
+-import akka.pattern.StatusReply
++import org.apache.pekko.actor.testkit.typed.scaladsl.{BehaviorTestKit, ReplyInbox}
++import org.apache.pekko.pattern.StatusReply
+ import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
+ import org.scalatest.flatspec.AnyFlatSpec
+ 
+ import java.time.Instant
+ import scala.concurrent.duration.Duration
+ import scala.concurrent.duration.*
+ 
+ class AlarmDetectorTest extends AnyFlatSpec {
+ 
+ 
+ 
+   private case class TestEntry(
+     device: String,
+     toState: String,
+     offset: Duration
+   )
+ 
+   private val testData = Seq(
+     TestEntry("d1", "off", 3.seconds),
+     TestEntry("d1", "on", 1.seconds),
+     TestEntry("d2", "off", 10.seconds),
+     TestEntry("d2", "on", 1.seconds),
+   )
+ 
+   private def convertToBinaryData(elems: Seq[TestEntry]): Seq[BinaryStateEvent] = {
+ 
+EOF
+)
