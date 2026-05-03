@@ -85,15 +85,20 @@ class AlarmStateManager(
 
   }
 
-  def getState: AlarmStateData = AlarmStateData(
-    devices,
-    alarmDetectorFormula.getAlarms(devices.values.toSeq, Instant.now()).map(_.name)
-  )
+  def getState: AlarmStateData = {
+    val detectedAlarms = alarmDetectorFormula.getAlarms(devices.values.toSeq, Instant.now())
+    AlarmStateData(
+      devices,
+      detectedAlarms.triggeredByAlarms,
+      detectedAlarms.triggeredByConfigurations.map(_.name)
+    )
+  }
 
 
 }
 
 case class AlarmStateData(
   devices: Map[String, AlarmDevice],
-  alarms: Seq[String]
+  triggeredByAlarms: Seq[String],
+  triggeredByConfigurations: Seq[String]
 )

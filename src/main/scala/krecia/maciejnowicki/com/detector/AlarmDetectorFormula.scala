@@ -22,6 +22,10 @@ class AlarmDetectorFormula (
   alarmDuration: FiniteDuration,
   configurations: Seq[AlarmConfiguration],
 ) extends LazyLogging {
+  case class AlarmDetectionResult(
+    triggeredByConfigurations: Seq[AlarmConfiguration],
+    triggeredByAlarms: Seq[String]
+  )
 
   private[detector] case class RelevantAlarm(date: Instant)
 
@@ -29,7 +33,7 @@ class AlarmDetectorFormula (
 
   private val longestAlarmDuration = configurations.map(_.period).maxBy(_.toMillis)
 
-  def getAlarms(alarmDevices: Seq[AlarmDevice], forTime: Instant): Seq[AlarmConfiguration] = {
+  def getAlarms(alarmDevices: Seq[AlarmDevice], forTime: Instant): AlarmDetectionResult = {
 
     val devices = {
       alarmDevices.map { device =>
@@ -38,7 +42,15 @@ class AlarmDetectorFormula (
     }
 
     logger.info(s"Alarms: " + devices.map { device => device.alarms })
-    configurations.filter(config => detectForConfiguration(devices, config, forTime))
+    val triggeredByConfigurations = configurations.filter(config => detectForConfiguration(devices, config, forTime))
+    val triggeredByAlarms = triggeredByConfigurations
+      .flatMap { configuration =>
+        getTriggeredDevicesForConfiguration(devices, configuration, forTime)
+      }
+      .map(_.device.id)
+      .distinct
+
+    AlarmDetectionResult(triggeredByConfigurations, triggeredByAlarms)
   }
 
   private[detector] def getForDevice(device: AlarmDevice, forTime: Instant): DeviceWithAlarms = {
@@ -72,15 +84,7 @@ class AlarmDetectorFormula (
   }
 
   private[detector] def detectForConfiguration(alarmsRaw: Seq[DeviceWithAlarms], configuration: AlarmConfiguration, forTime: Instant): Boolean = {
-    val cutoff = forTime.minusMillis(configuration.period.toMillis)
-    val alarms = alarmsRaw
-      .map { device =>
-        device.copy(
-          alarms = device.alarms.filterNot(_.date.isBefore(cutoff))
-        )
-      }
-      .filter(_.alarms.nonEmpty)
-
+    val alarms = getTriggeredDevicesForConfiguration(alarmsRaw, configuration, forTime)
 
     if (alarms.isEmpty) false
     else {
@@ -89,7 +93,17 @@ class AlarmDetectorFormula (
 
       devicesAlarm && countAlarm
     }
+  }
 
+  private[detector] def getTriggeredDevicesForConfiguration(alarmsRaw: Seq[DeviceWithAlarms], configuration: AlarmConfiguration, forTime: Instant): Seq[DeviceWithAlarms] = {
+    val cutoff = forTime.minusMillis(configuration.period.toMillis)
+    alarmsRaw
+      .map { device =>
+        device.copy(
+          alarms = device.alarms.filterNot(_.date.isBefore(cutoff))
+        )
+      }
+      .filter(_.alarms.nonEmpty)
   }
 
 

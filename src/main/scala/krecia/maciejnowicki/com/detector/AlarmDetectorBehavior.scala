@@ -22,7 +22,7 @@ class AlarmDetectorBehavior @Inject()(
   private case class State(alarmStateManager: AlarmStateManager, alarmData: AlarmStateData)
 
   def alarmDetector(): Behavior[AlarmDetectorCommand] = {
-    alarmDetectorBehaviour(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty)))
+    alarmDetectorBehaviour(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty, Seq.empty)))
   }
   
   private def teeest = {
@@ -77,8 +77,8 @@ class AlarmDetectorBehavior @Inject()(
   }
 
   private def applyState(alarmStateData: AlarmStateData): Unit = {
-    if (alarmStateData.alarms.nonEmpty) {
-      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON, alarmStateData.alarms)
+    if (alarmStateData.triggeredByAlarms.nonEmpty) {
+      alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.ON, alarmStateData.triggeredByAlarms)
     } else {
       alarmService.alarmDeviceRef ! AlarmDeviceCommand.SetState(AlarmState.OFF, Seq.empty)
     }
