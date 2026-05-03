@@ -13,6 +13,7 @@ import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
 
 import java.time.Instant
+import java.util.Locale
 import scala.concurrent.duration.*
 
 @DiscoverableController
@@ -32,21 +33,27 @@ class AlarmDetectorController @Inject()(
         completeJson(success.alarmData)
       }
     } ~ (path(Segment) & post) { toState =>
+      val normalizedState = toState.toUpperCase(Locale.ROOT)
 
-      val from = if (toState == "OFF") {
-        "ON"
-      } else "OFF"
+      normalizedState match {
+        case "ON" | "OFF" =>
+          val from = if (normalizedState == "OFF") {
+            "ON"
+          } else "OFF"
 
-      alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
-        "local",
-        "local",
-        from,
-        toState,
-        None,
-        Instant.now()
-      )))
+          alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
+            "local",
+            "local",
+            from,
+            normalizedState,
+            None,
+            Instant.now()
+          )))
 
-      complete("ok")
+          complete("ok")
+        case _ =>
+          complete(400, "Invalid toState. Supported values: ON, OFF")
+      }
     }
   }
 }

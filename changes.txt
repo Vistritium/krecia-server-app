@@ -1,92 +1,83 @@
  (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
-diff --git a/build.sbt b/build.sbt
-index 46fcec751e86e5a00ab87c7220717a08a1e880ca..3e288e570a2f8c3d19d6bdda23661c7517e1263d 100644
---- a/build.sbt
-+++ b/build.sbt
-@@ -1,50 +1,50 @@
- name := "serverapp"
+diff --git a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
+index 6dc8f53b4b0ad608c7d4fe90f0c5250f3a7ca745..8958e500e839895ac3a72816401dfafc552867a3 100644
+--- a/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
++++ b/src/main/scala/krecia/maciejnowicki/com/web/controllers/AlarmDetectorController.scala
+@@ -1,52 +1,59 @@
+ package krecia.maciejnowicki.com.web.controllers
  
- version := "0.1"
+ import org.apache.pekko.actor.typed.ActorSystem
+ import org.apache.pekko.http.scaladsl.server.Route
+ import krecia.maciejnowicki.com.web.{Controller, ControllerDeps, DiscoverableController}
+ import org.apache.pekko.http.scaladsl.server.Directives.*
+ import com.google.inject.{Inject, Singleton}
+ import com.typesafe.scalalogging.LazyLogging
+ import krecia.maciejnowicki.com.detector.{AlarmDetectorCommand, AlarmDetectorService}
+ import org.apache.pekko.actor.typed.scaladsl.AskPattern.*
+ import org.apache.pekko.util.Timeout
+ import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
+ import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
  
--scalaVersion := "3.3.1"
--val JacksonVersion = "2.16.1"
--val PekkoVersion = "1.1.3"
-+scalaVersion := "3.8.3"
-+val JacksonVersion = "2.21.3"
-+val PekkoVersion = "1.6.0"
- val PekkoHttpVersion = "1.3.0"
- val PekkoConnectorsVersion = "1.3.0"
+ import java.time.Instant
++import java.util.Locale
+ import scala.concurrent.duration.*
  
- resolvers += "Pekko repository".at("https://repo.akka.io/maven")
+ @DiscoverableController
+ @Singleton
+ class AlarmDetectorController @Inject()(
+   controllerDeps: ControllerDeps,
+   alarmDetectorService: AlarmDetectorService,
+   actorSystem: ActorSystem[Nothing]
+ ) extends Controller(controllerDeps) {
  
- enablePlugins(JavaAppPackaging)
- enablePlugins(DockerPlugin)
+   private implicit val timeout: Timeout = 3.seconds
+   private implicit val implicitAs: ActorSystem[_] = actorSystem
  
- libraryDependencies ++= Seq(
-   "com.fasterxml.jackson.module" %% "jackson-module-scala" % JacksonVersion,
-   "com.fasterxml.jackson.core" % "jackson-databind" % JacksonVersion,
-   "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % JacksonVersion,
--  "com.google.guava" % "guava" % "33.0.0-jre",
--  "org.apache.commons" % "commons-lang3" % "3.14.0",
--  "commons-io" % "commons-io" % "2.15.1",
-+  "com.google.guava" % "guava" % "33.6.0-jre",
-+  "org.apache.commons" % "commons-lang3" % "3.20.0",
-+  "commons-io" % "commons-io" % "2.22.0",
-   "com.iheart" %% "ficus" % "1.5.2",
-   "net.codingwell" %% "scala-guice" % "7.0.0",
-   "com.google.inject.extensions" % "guice-assistedinject" % "7.0.0",
--  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
--  "ch.qos.logback" % "logback-classic" % "1.4.14",
--  "net.harawata" % "appdirs" % "1.2.2",
-+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.6",
-+  "ch.qos.logback" % "logback-classic" % "1.5.32",
-+  "net.harawata" % "appdirs" % "1.5.0",
-   "org.apache.pekko" % "pekko-actor_2.13" % PekkoVersion,
-   "org.apache.pekko" % "pekko-stream_2.13" % PekkoVersion,
-   "org.apache.pekko" % "pekko-slf4j_2.13" % PekkoVersion,
-   "org.apache.pekko" % "pekko-http_2.13" % PekkoHttpVersion,
-   "org.apache.pekko" % "pekko-connectors-mqtt_2.13" % PekkoConnectorsVersion,
-   "org.reflections" % "reflections" % "0.10.2",
-   "org.apache.pekko" % "pekko-actor-typed_2.13" % PekkoVersion,
--  "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.16.0",
--  "com.twilio.sdk" % "twilio" % "9.15.0",
--  "com.vonage" % "server-sdk" % "8.1.0",
--  "org.scalatest" %% "scalatest" % "3.2.17" % Test,
-+  "com.github.pjfanning" %% "jackson-module-scala3-enum" % "2.21.3",
-+  "com.twilio.sdk" % "twilio" % "12.0.0",
-+  "com.vonage" % "server-sdk" % "9.10.2",
-+  "org.scalatest" %% "scalatest" % "3.2.20" % Test,
-   "org.apache.pekko" % "pekko-actor-testkit-typed_2.13" % PekkoVersion % Test
- )
- 
- enablePlugins(SbtTwirl)
- 
- Compile/mainClass := Some("krecia.maciejnowicki.com.Main")
- 
- dockerBaseImage := "eclipse-temurin:21-alpine"
- dockerRepository := Some("server.krecia.maciejnowicki.com:5000")
- dockerExposedPorts := Seq(8080)
- dockerUpdateLatest := true
-diff --git a/project/build.properties b/project/build.properties
-index abbbce5da4a8473a9e1aaa2a723cc4ce51b71494..dabdb159035d2210e30b7d74ef7a9ee7973a4add 100644
---- a/project/build.properties
-+++ b/project/build.properties
-@@ -1 +1 @@
--sbt.version=1.9.8
-+sbt.version=1.12.11
-diff --git a/project/plugins.sbt b/project/plugins.sbt
-index ec61edb42abddfe71e6fd8307ce984591073a4b2..f4612b0e3440534b686e02f9da81b7c18b252520 100644
---- a/project/plugins.sbt
-+++ b/project/plugins.sbt
-@@ -1,5 +1,5 @@
--addSbtPlugin("org.playframework.twirl" % "sbt-twirl" % "2.0.3")
-+addSbtPlugin("org.playframework.twirl" % "sbt-twirl" % "2.0.9")
- addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.6.4")
--addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.9.16")
-+addSbtPlugin("com.github.sbt" % "sbt-native-packager" % "1.11.5")
- 
- ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
-\ No newline at end of file
+   override def route: Route = pathPrefix("alarm_detector") {
+     get {
+       onSuccess(alarmDetectorService.alarmDetectorRef.askWithStatus[GetStateReply](ref => AlarmDetectorCommand.GetState(ref))) { success =>
+         completeJson(success.alarmData)
+       }
+     } ~ (path(Segment) & post) { toState =>
+-
+-      val from = if (toState == "OFF") {
+-        "ON"
+-      } else "OFF"
+-
+-      alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
+-        "local",
+-        "local",
+-        from,
+-        toState,
+-        None,
+-        Instant.now()
+-      )))
+-
+-      complete("ok")
++      val normalizedState = toState.toUpperCase(Locale.ROOT)
++
++      normalizedState match {
++        case "ON" | "OFF" =>
++          val from = if (normalizedState == "OFF") {
++            "ON"
++          } else "OFF"
++
++          alarmDetectorService.alarmDetectorRef.tell(AlarmDetectorCommand.BinaryStateEventCommand(BinaryStateEvent(
++            "local",
++            "local",
++            from,
++            normalizedState,
++            None,
++            Instant.now()
++          )))
++
++          complete("ok")
++        case _ =>
++          complete(400, "Invalid toState. Supported values: ON, OFF")
++      }
+     }
+   }
+ }
  
 EOF
 )

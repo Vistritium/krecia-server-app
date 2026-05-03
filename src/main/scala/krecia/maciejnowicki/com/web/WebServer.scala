@@ -14,6 +14,7 @@ import org.apache.pekko.http.scaladsl.server.Directives._
 
 import collection.JavaConverters._
 import scala.concurrent.ExecutionContext
+import scala.util.{Failure, Success}
 
 @Singleton
 class WebServer @Inject()(
@@ -39,9 +40,20 @@ class WebServer @Inject()(
   require(controllers.nonEmpty)
   private val route = controllers.map(_.route).reduce(_ ~ _)
 
-  private val bindingFuture: Unit = {
+  private val bindingFuture = {
     val port: Int = config.getInt("web.port")
-    Http().bindAndHandle(route, "0.0.0.0", port)
-    logger.info(s"Server started on port $port")
+    val boundInterface = "0.0.0.0"
+    val futureBinding = Http().bindAndHandle(route, boundInterface, port)
+
+    futureBinding.onComplete {
+      case Success(binding) =>
+        val address = binding.localAddress
+        logger.info(s"Server bound to ${address.getHostString}:${address.getPort}")
+      case Failure(exception) =>
+        logger.error("Failed to bind HTTP server", exception)
+        actorSystem.terminate()
+    }(executionContext)
+
+    futureBinding
   }
 }
