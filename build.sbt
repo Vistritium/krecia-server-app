@@ -8,7 +8,7 @@ val PekkoVersion = "1.6.0"
 val PekkoHttpVersion = "1.3.0"
 val PekkoConnectorsVersion = "1.3.0"
 
-enablePlugins(JavaAppPackaging)
+enablePlugins(AshScriptPlugin)
 enablePlugins(DockerPlugin)
 
 libraryDependencies ++= Seq(
@@ -41,7 +41,8 @@ enablePlugins(SbtTwirl)
 
 Compile/mainClass := Some("krecia.maciejnowicki.com.Main")
 
-dockerBaseImage := "eclipse-temurin:21-alpine"
+dockerBaseImage := "eclipse-temurin:21-jre-alpine"
 dockerRepository := Some("registry.web.krecia.maciejnowicki.com:443")
 dockerExposedPorts := Seq(8080)
 dockerUpdateLatest := true
+
