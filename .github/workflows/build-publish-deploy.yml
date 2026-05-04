@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  DOCKER_REGISTRY: registry.web.krecia.maciejnowicki.com:5000
+  DOCKER_REGISTRY: registry.web.krecia.maciejnowicki.com:443
   DOCKER_USERNAME: kret
 
 jobs:
