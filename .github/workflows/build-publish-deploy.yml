@@ -1,0 +1,48 @@
+name: Build, Publish and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+env:
+  DOCKER_REGISTRY: registry.web.krecia.maciejnowicki.com:5000
+  DOCKER_USERNAME: kret
+
+jobs:
+  build-publish-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Install deploy tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.KRECIA_DOCKER_REGISTRY_PASSWORD }}
+
+      - name: Build and publish Docker image
+        run: sbt Docker/publish
+
+      - name: Deploy serverapp
+        env:
+          SSHPASS: ${{ secrets.SSHPASS }}
+        run: bash scripts/deploy.sh

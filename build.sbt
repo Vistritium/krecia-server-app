@@ -42,6 +42,6 @@ enablePlugins(SbtTwirl)
 Compile/mainClass := Some("krecia.maciejnowicki.com.Main")
 
 dockerBaseImage := "eclipse-temurin:21-alpine"
-dockerRepository := Some("server.krecia.maciejnowicki.com:5000")
+dockerRepository := Some("registry.web.krecia.maciejnowicki.com:5000")
 dockerExposedPorts := Seq(8080)
 dockerUpdateLatest := true
