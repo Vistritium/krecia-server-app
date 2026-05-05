@@ -7,34 +7,28 @@ import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.alarm.{AlarmDeviceCommand, AlarmService}
 import krecia.maciejnowicki.com.detector.AlarmDetectorCommand.GetStateReply
-import krecia.maciejnowicki.com.detector.AlarmState.OFF
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
 
-import scala.concurrent.Future
 import scala.concurrent.duration.*
 
 @Singleton
 class AlarmDetectorBehavior @Inject()(
-  alarmDetectorFormula: AlarmDetectorFormula,
+  weakAlertsAlarmDetectorFormula: WeakAlertsAlarmDetectorFormula,
   alarmService: AlarmService,
 ) extends LazyLogging {
 
-  private case class State(alarmStateManager: AlarmStateManager, alarmData: AlarmStateData)
+  private case class State(
+    weakAlertsAlarmDetector: WeakAlertsAlarmDetector,
+    strongAlertsAlarmDetector: StrongAlertsAlarmDetector,
+    alarmData: AlarmStateData
+  )
 
   def alarmDetector(): Behavior[AlarmDetectorCommand] = {
-    alarmDetectorBehaviour(State(new AlarmStateManager(alarmDetectorFormula), AlarmStateData(Map.empty, Seq.empty, Seq.empty)))
-  }
-  
-  private def teeest = {
-    Behaviors.setup[String] { context => 
-      
-      Behaviors.receiveMessage[String] { msg =>
-        context.pipeToSelf[String](Future.successful("")){ result =>
-          "completed"
-        }
-        Behaviors.same[String]
-      }
-    }
+    alarmDetectorBehaviour(State(
+      new WeakAlertsAlarmDetector(weakAlertsAlarmDetectorFormula),
+      new StrongAlertsAlarmDetector,
+      AlarmStateData.Empty
+    ))
   }
 
   private def alarmDetectorBehaviour(state: State): Behavior[AlarmDetectorCommand] = {
@@ -53,7 +47,10 @@ class AlarmDetectorBehavior @Inject()(
 
       Behaviors.receiveMessage {
         case AlarmDetectorCommand.Refresh => {
-          val alarmStateData = state.alarmStateManager.getState
+          val alarmStateData = AlarmStateData.combine(
+            state.weakAlertsAlarmDetector.getState,
+            state.strongAlertsAlarmDetector.getState
+          )
           applyState(alarmStateData)
           alarmDetectorBehaviorActive(state.copy(
             alarmData = alarmStateData
@@ -61,7 +58,9 @@ class AlarmDetectorBehavior @Inject()(
         }
         case AlarmDetectorCommand.BinaryStateEventCommand(binaryStateEvent) => {
           logger.info(s"Processing ${binaryStateEvent}")
-          val alarmStateData = state.alarmStateManager.process(binaryStateEvent)
+          val weakAlertsState = state.weakAlertsAlarmDetector.process(binaryStateEvent)
+          val strongAlertsState = state.strongAlertsAlarmDetector.process(binaryStateEvent)
+          val alarmStateData = AlarmStateData.combine(weakAlertsState, strongAlertsState)
           applyState(alarmStateData)
 
           alarmDetectorBehaviorActive(state.copy(

@@ -1,7 +1,6 @@
 package krecia.maciejnowicki.com.detector
 
 import com.typesafe.scalalogging.LazyLogging
-import krecia.maciejnowicki.com.detector.AlarmState.OFF
 import krecia.maciejnowicki.com.mqtt.BinaryStateEvent
 
 import java.time.Instant
@@ -21,47 +20,50 @@ case class AlarmDevice(
   events: List[AlarmEvent]
 )
 
-class AlarmStateManager(
-  alarmDetectorFormula: AlarmDetectorFormula
+class WeakAlertsAlarmDetector(
+  alarmDetectorFormula: WeakAlertsAlarmDetectorFormula
 ) extends LazyLogging {
 
   private var devices: Map[String, AlarmDevice] = Map.empty
   private val keepUpTo = 10.minutes
 
   def process(event: BinaryStateEvent): AlarmStateData = {
-    val state = if (event.toState.equalsIgnoreCase("on")) AlarmState.ON else AlarmState.OFF
-    val newEvent = AlarmEvent(state, event.changed)
+    if (!event.isWeakAlert) getState
+    else {
+      val state = if (event.toState.equalsIgnoreCase("on")) AlarmState.ON else AlarmState.OFF
+      val newEvent = AlarmEvent(state, event.changed)
 
-    devices.get(event.entityId) match
-      case None => {
-        val events = if (newEvent.state == AlarmState.ON) {
-          List(newEvent, AlarmEvent(AlarmState.OFF, newEvent.datetime.minusMillis(100)))
-        } else {
-          List(newEvent)
+      devices.get(event.entityId) match
+        case None => {
+          val events = if (newEvent.state == AlarmState.ON) {
+            List(newEvent, AlarmEvent(AlarmState.OFF, newEvent.datetime.minusMillis(100)))
+          } else {
+            List(newEvent)
+          }
+
+          devices = devices + ((event.entityId, AlarmDevice(event.entityId, events)))
         }
+        case Some(device) => {
 
-        devices = devices + ((event.entityId, AlarmDevice(event.entityId, events)))
-      }
-      case Some(device) => {
+          val latestState = device.events.head
+          val existingEvents = if (latestState.state == state) {
+            device.events.tail
+          } else {
+            device.events
+          }
 
-        val latestState = device.events.head
-        val existingEvents = if (latestState.state == state) {
-          device.events.tail
-        } else {
-          device.events
-        }
-
-        devices = devices.updated(
-          event.entityId,
-          device.copy(
-            events = newEvent :: existingEvents
+          devices = devices.updated(
+            event.entityId,
+            device.copy(
+              events = newEvent :: existingEvents
+            )
           )
-        )
-      }
+        }
 
-    updateState()
+      updateState()
 
-    getState
+      getState
+    }
   }
 
 
@@ -102,3 +104,14 @@ case class AlarmStateData(
   triggeredByAlarms: Seq[String],
   triggeredByConfigurations: Seq[String]
 )
+
+object AlarmStateData {
+  val Empty: AlarmStateData = AlarmStateData(Map.empty, Seq.empty, Seq.empty)
+
+  def combine(states: AlarmStateData*): AlarmStateData =
+    AlarmStateData(
+      devices = states.flatMap(_.devices).toMap,
+      triggeredByAlarms = states.flatMap(_.triggeredByAlarms).distinct,
+      triggeredByConfigurations = states.flatMap(_.triggeredByConfigurations).distinct
+    )
+}

@@ -1,6 +1,5 @@
 package krecia.maciejnowicki.com.detector
 
-import com.google.inject.{Inject, Singleton}
 import com.typesafe.scalalogging.LazyLogging
 import krecia.maciejnowicki.com.detector.AlarmState.ON
 
@@ -18,7 +17,7 @@ case class AlarmConfiguration(
 }
 
 
-class AlarmDetectorFormula (
+class WeakAlertsAlarmDetectorFormula (
   alarmDuration: FiniteDuration,
   configurations: Seq[AlarmConfiguration],
 ) extends LazyLogging {
