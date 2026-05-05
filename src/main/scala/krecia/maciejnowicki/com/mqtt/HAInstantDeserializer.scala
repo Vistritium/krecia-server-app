@@ -16,9 +16,17 @@ class HAInstantDeserializer extends StdDeserializer[Instant](classOf[Instant]) {
     .appendOffset("+HHMM", "Z")
     .toFormatter
 
+  private val homeAssistantOffsetDateTime = new DateTimeFormatterBuilder()
+    .parseCaseInsensitive()
+    .appendPattern("yyyy-MM-dd HH:mm:ss")
+    .appendFraction(java.time.temporal.ChronoField.NANO_OF_SECOND, 0, 9, true)
+    .appendOffset("+HHMM", "Z")
+    .toFormatter
+
   private val isoDateTimeFormatters = Seq(
     DateTimeFormatter.ISO_OFFSET_DATE_TIME,
     basicOffsetIsoDateTime,
+    homeAssistantOffsetDateTime,
   )
 
   override def deserialize(p: JsonParser, ctxt: DeserializationContext): Instant = {
@@ -31,7 +39,7 @@ class HAInstantDeserializer extends StdDeserializer[Instant](classOf[Instant]) {
         throw ctxt.weirdStringException(
           value,
           classOf[Instant],
-          "Expected ISO-8601 offset date-time, for example 2026-05-04T18:32:05.680636+0200",
+          "Expected offset date-time, for example 2026-05-04T18:32:05.680636+0200 or 2026-05-05 09:46:15.683118+0200",
         )
       }
   }
