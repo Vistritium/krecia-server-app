@@ -17,7 +17,7 @@ case class AlarmConfiguration(
 }
 
 
-class WeakAlertsAlarmDetectorFormula (
+class AlarmDetectorFormula (
   alarmDuration: FiniteDuration,
   configurations: Seq[AlarmConfiguration],
 ) extends LazyLogging {

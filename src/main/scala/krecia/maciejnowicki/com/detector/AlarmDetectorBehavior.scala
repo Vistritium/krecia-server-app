@@ -13,20 +13,18 @@ import scala.concurrent.duration.*
 
 @Singleton
 class AlarmDetectorBehavior @Inject()(
-  weakAlertsAlarmDetectorFormula: WeakAlertsAlarmDetectorFormula,
+  alarmDetectorFormula: AlarmDetectorFormula,
   alarmService: AlarmService,
 ) extends LazyLogging {
 
   private case class State(
-    weakAlertsAlarmDetector: WeakAlertsAlarmDetector,
-    strongAlertsAlarmDetector: StrongAlertsAlarmDetector,
+    alarmStateManager: AlarmStateManager,
     alarmData: AlarmStateData
   )
 
   def alarmDetector(): Behavior[AlarmDetectorCommand] = {
     alarmDetectorBehaviour(State(
-      new WeakAlertsAlarmDetector(weakAlertsAlarmDetectorFormula),
-      new StrongAlertsAlarmDetector,
+      new AlarmStateManager(alarmDetectorFormula),
       AlarmStateData.Empty
     ))
   }
@@ -47,10 +45,7 @@ class AlarmDetectorBehavior @Inject()(
 
       Behaviors.receiveMessage {
         case AlarmDetectorCommand.Refresh => {
-          val alarmStateData = AlarmStateData.combine(
-            state.weakAlertsAlarmDetector.getState,
-            state.strongAlertsAlarmDetector.getState
-          )
+          val alarmStateData = state.alarmStateManager.getState
           applyState(alarmStateData)
           alarmDetectorBehaviorActive(state.copy(
             alarmData = alarmStateData
@@ -58,9 +53,7 @@ class AlarmDetectorBehavior @Inject()(
         }
         case AlarmDetectorCommand.BinaryStateEventCommand(binaryStateEvent) => {
           logger.info(s"Processing ${binaryStateEvent}")
-          val weakAlertsState = state.weakAlertsAlarmDetector.process(binaryStateEvent)
-          val strongAlertsState = state.strongAlertsAlarmDetector.process(binaryStateEvent)
-          val alarmStateData = AlarmStateData.combine(weakAlertsState, strongAlertsState)
+          val alarmStateData = state.alarmStateManager.process(binaryStateEvent)
           applyState(alarmStateData)
 
           alarmDetectorBehaviorActive(state.copy(

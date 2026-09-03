@@ -9,8 +9,8 @@ import scala.concurrent.duration._
 class DetectorConfiguration extends AbstractModule {
 
   @Provides
-  def formula: WeakAlertsAlarmDetectorFormula =
-    WeakAlertsAlarmDetectorFormula(
+  def formula: AlarmDetectorFormula =
+    AlarmDetectorFormula(
       20.seconds,
       Seq(
         AlarmConfiguration(devices = 2, alarms = 3, period = 3.minutes),
