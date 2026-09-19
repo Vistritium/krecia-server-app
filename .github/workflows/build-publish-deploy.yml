@@ -1,10 +1,7 @@
 name: Build, Publish and Deploy
 
+# Development and deployment moved to Vistritium/krecia.
 on:
-  push:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 env:
